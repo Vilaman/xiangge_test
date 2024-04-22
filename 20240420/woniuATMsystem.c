@@ -27,9 +27,9 @@ int regists();
 void login();
 void loginMenu();
 void Queryfun();
-float Drawfun();
-float Savefun();
-float Tranferfun();
+void Drawfun();
+void Savefun();
+void Tranferfun();
 void Deletefun();
 
 
@@ -77,17 +77,19 @@ void loginMenu() {
 
 
 void mainmenu() {
+  void (*menu2[5])() = {Queryfun, Drawfun, Savefun, Tranferfun, Deletefun};
   bool isrun = true;
   printf("-------woniuATM system二级菜单--------\n");
   do {
-	printf("-------------------------------------------------\n");
+    printf("-------------------------------------------------\n");
     printf("1.查询余额\n");
-	printf("2.取钱\n");
+    printf("2.取钱\n");
+    printf("3.存钱\n");
     printf("4.转账\n");
     printf("5.注销账户\n");
     printf("6.返回上一级\n");
     printf("-------------------------------------------------\n");
-	char act;
+    char act;
     scanf(" %c", &act);
     switch (act) {
     case '1':
@@ -212,11 +214,11 @@ void Queryfun() {
 
 
 //取钱功能
-float Drawfun() {
+void Drawfun() {
   if (woniuATM[successindex].money > 0) {
-    int num = 0;
+    float num = 0;
     printf("请输入您要取的金额\n");
-    scanf(" %d", &num);
+    scanf(" %f", &num);
     if (num <= woniuATM[successindex].money) {
       woniuATM[successindex].money -= num;
       printf("取钱成功，余额为%.2f\n", woniuATM[successindex].money);
@@ -228,40 +230,42 @@ float Drawfun() {
   else {
     printf("余额不足，取钱失败\n");
   }
-  return woniuATM[successindex].money;
 }
 
 
 //存钱功能
-float Savefun(){
+void Savefun(){
 	float savemoney=0;
 	printf("请输入你要存的金额\n");
 	scanf(" %f",&savemoney);
+	if(savemoney>0){
 	woniuATM[successindex].money+=savemoney;
 	printf("存钱成功您目前的余额为%.2f\n",woniuATM[successindex].money);
-	return woniuATM[successindex].money;
+	}else{
+	printf("请输入正确的金额\n");
+	}
 }
 
 //转账系统
-float Tranferfun() {
+void Tranferfun() {
   char tranferuser[16];
   float tmoney = 0;
   printf("请输入你要转账得用户名\n");
   scanf(" %s", tranferuser);
   //先判断用户名是否存在
   bool userIsnotexist = userExistfun(tranferuser);
-  if (userIsnotexist) {
-    printf("你输入的用户名不存在转账失败\n");
+  if (userIsnotexist||strcmp(woniuATM[successindex].users,tranferuser)==0) {
+    printf("你输入的用户名不存在或为自己转账失败\n");
   } else {
     for (int i = 0; i < total; i++) {
       if (strcmp(woniuATM[i].users, tranferuser) == 0) {
         printf("请输入你转账的金额\n");
         scanf(" %f", &tmoney);
-        if (tmoney <= woniuATM[successindex].money) {
+        if (tmoney <= woniuATM[successindex].money&&tmoney>0) {
           woniuATM[successindex].money -= tmoney;
           woniuATM[i].money += tmoney;
           printf("转账成功，你的余额为%.2f\n", woniuATM[successindex].money);
-          return woniuATM[successindex].money, woniuATM[i].money;
+          return;
 
         } else {
           printf("您的金额不足,转账失败\n");
