@@ -194,10 +194,6 @@ void shownodeData(Node *phead, int index) {
     return;
   }
   Node *cur = phead;
-  if (index == 0) {//如果是查看下标为0的数据
-    printf("当前下标%d的值为%d\n",index, cur->data);
-	return;
-  }
   for (int i = 0; i < index - 1; i++) {
     cur = cur->next;
   }
