@@ -20,10 +20,10 @@ int sumNode(Node *phead);
 void Changenode(Node **phead, typenode* data, int index);
 void DelNode(Node **phead,int index);
 void shownodeData(Node *phead, int index);
-bool isDataexist(Node *phead, typenode *data);
+int isDataexist(Node *phead, char *name,char *pass);
 void Nodefree(Node **phead);
 
-
+int logindex = -1;
 
 //初始化newnode
 Node *initnode(typenode *data) {
@@ -56,7 +56,7 @@ void showNode(Node *phead) {
   Node *cur = phead;//定义一个cur节点 指向phead
   while (cur != NULL) {//从当前链表的第一个节点开始向下遍历
 
-    printf("%s\n", cur->data);
+    printf("%s,%s,%s,%d\n", cur->data->username,cur->data->password,cur->data->sex,cur->data->age);
     cur = cur->next;
   }
 }
@@ -146,7 +146,7 @@ void Changenode(Node **phead, typenode* data, int index) {
     cur = cur->next;
   }
   cur->data = data;
-  printf("当前下标%d数据修改为%s\n", index, cur->data);
+//  printf("当前下标%d数据修改为%s\n", index, cur->data);
 }
 
 //查看下标对应的数据
@@ -165,27 +165,35 @@ void shownodeData(Node *phead, int index) {
   for (int i = 0; i < index ; i++) {
     cur = cur->next;
   }
-  printf("当前%d下标的值为%s\n",index, cur->data);
+  printf("当前%d下标的值为%s\n",index, cur->data->username);
   return;
 }
 
-//判断数据是否存在链表中
-bool isDataexist(Node *phead, typenode *data) {
+//判断数据是否存在链表中并返回当前下标
+int isDataexist(Node *phead, char *loginname,char *loginpass) {
   if (phead == NULL) {
     printf("当前链表不存在数据\n");
-    return false;
+    return -1;
   }
   Node *cur = phead;
   do {
-    if (cur->data == data) {
-      printf("当前数据%s存在链表中\n",data);
-      return true;
+    logindex++;
+    /*  if (cur->data == data) {
+        printf("当前数据%s存在链表中对应的下标为%d\n",data，count);
+            return true;
+      }*/
+    if (strcmp(cur->data->username, loginname) == 0 &&
+        strcmp(cur->data->password, loginpass) == 0) {
+
+ //     printf("当前数据%s存在链表中对应的下标为%d\n",logindex);
+      return logindex;
     }
+
     cur = cur->next;
   } while (cur != NULL);
 
-  printf("当前数据%s不存在链表中\n",data);
-  return false;
+//  printf("当前数据%s不存在链表中\n", data);
+  return logindex;
 }
 
 //清空链表

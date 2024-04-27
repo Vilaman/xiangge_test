@@ -9,7 +9,15 @@
 #ifndef MYSLNODE_H
 #define MYSLNODE_H
 #define SIZE 100
-typedef char typenode;
+
+typedef struct User {
+  char username[20];
+  char password[20];
+  char sex[5];
+  int age;
+} User;
+
+typedef User typenode;
 
 
 typedef struct Node {
@@ -27,7 +35,7 @@ int sumNode(Node *phead);
 void Changenode(Node **phead, typenode* data, int index);
 void DelNode(Node **phead,int index);
 void shownodeData(Node *phead, int index);
-bool isDataexist(Node *phead, typenode *data);
+int isDataexist(Node *phead, char *name,char *pass);
 void Nodefree(Node **phead);
 
 

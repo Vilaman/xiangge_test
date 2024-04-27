@@ -5,7 +5,7 @@ RF=-rf
 EXE=simple
 $(EXE):debug clean
 debug:
-	@$(CC) -o $(LX) $(LX).c mySLNode.c
+	@$(CC) -o $(LX) $(LX).c mySLNode.c myQueue.c
 	@./$(LX)
 clean:
 	@$(RM) $(RF) $(LX)
