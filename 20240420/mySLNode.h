@@ -34,7 +34,7 @@ void Insertnode(Node **phead,typenode *data,int index);
 int sumNode(Node *phead);
 void Changenode(Node **phead, typenode* data, int index);
 void DelNode(Node **phead,int index);
-void shownodeData(Node *phead, int index);
+char *shownodeData(Node *phead, int index);
 int isDataexist(Node *phead, char *name,char *pass);
 void Nodefree(Node **phead);
 

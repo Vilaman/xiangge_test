@@ -10,6 +10,7 @@
 #include<stdbool.h>
 #include<stdlib.h>
 #include"mySLNode.h"
+#include<time.h>
 #define N 50
 
 int line=0;//定义文件是否存在用户行数
@@ -25,6 +26,7 @@ int UserReadandInit();
 void UserWrite(User *u);
 void regIster();
 void DelUser();
+void writeTolog(char *status);
 
 
 
@@ -71,6 +73,8 @@ void menuone() {
 
 void menutwo() {
   bool isRuntwo = true;
+  char *statusshow="view-user";
+  char *statuslogout="logout";
   printf("欢迎来到二级菜单\n");
   do {
     printf("-----------------------------------------\n");
@@ -83,6 +87,7 @@ void menutwo() {
 
     case '1':
       showNode(user);
+	writeTolog(statusshow);
       break;
     case '2':
       //    ChangePass();
@@ -96,6 +101,7 @@ void menutwo() {
       break;
     case '5':
       isRuntwo = false;
+	  writeTolog(statuslogout);
       return;
     default:
       printf("请输入正确的选项\n");
@@ -139,9 +145,10 @@ bool isExistinTXT(char *newname, int line) {
 
 
 int login() {
+	char *status="login";
   char loginname[20];
   char loginpass[20];
-  printf("line:%d\n", line);
+//  printf("line:%d\n", line);
   if (isExistuser()) {
     printf("当前没有用户存在请先注册\n");
     return -1;
@@ -151,13 +158,14 @@ int login() {
   printf("请输入密码\n");
   scanf(" %s", loginpass);
   logind = isDataexist(user, loginname, loginpass);
-//  printf("%d\n", logind);
+  //  printf("%d\n", logind);
   if (logind == -1) {
 
     printf("登录失败\n");
     return -1;
   }
   printf("登录成功\n");
+  writeTolog(status);
   menutwo();
   return 0;
 }
@@ -180,7 +188,7 @@ int UserReadandInit() {
     if (buf[strlen(buf) - 1] == '\n')
       line++;
   }
-  printf("Total line : % d\n", line);
+//  printf("Total line : % d\n", line);
   if (line == 0) {
 
     printf("当前没有用户请先注册\n");
@@ -191,8 +199,8 @@ int UserReadandInit() {
   for (int i = 0; i < line; i++) {
     fscanf(readpf, "%s %s %s %d\n", u[i].username, u[i].password, u[i].sex,
            &u[i].age);
-    printf(" 初始化：%s %s %s %d\n", u[i].username, u[i].password, u[i].sex,
-           u[i].age);
+  //  printf(" 初始化：%s %s %s %d\n", u[i].username, u[i].password, u[i].sex,
+    //       u[i].age);
     appendNode(&user, (u + i)); //初始化链表
   }
 
@@ -218,6 +226,7 @@ void UserWrite(User *u) {
 //注册模块
 void regIster(){
 	char regname[20];
+	char strlog[60];
 	printf("请输入用户名\n");
 	scanf(" %s",regname);
 	if(isExistinTXT(regname,line)){
@@ -239,6 +248,7 @@ void regIster(){
 //	showNode(user);
 	UserWrite(u1);
 	line++;
+
 	printf("注册成功\n");
 	return;
 }
@@ -263,11 +273,12 @@ void ChageData(){
 
 
 void DelUser() {
+  char *statusdelete="delete-user";
   int num = -1;
-  Node *current = user;
   printf("请输入你要删除的用户序号\n");
   scanf(" %d", &num);
   DelNode(&user, num);
+	  writeTolog(statusdelete);
   line--;
   FILE *fp2 = fopen("message.txt", "w+");
   if (fp2 == NULL) {
@@ -275,7 +286,7 @@ void DelUser() {
     perror("open file");
     exit(1);
   }
-printf("这是添加成功后的\n");
+  Node *current = user;
   while (current != NULL) { //从当前链表的第一个节点开始向下遍历
 
     fprintf(fp2, "%s %s %s %d\n", current->data->username,
@@ -289,6 +300,33 @@ printf("这是添加成功后的\n");
 //  showNode(user);
   return;
 }
+
+void writeTolog(char *status) {
+
+  FILE *writelogfp = fopen("log.txt", "a+");
+  if (writelogfp == NULL) {
+    perror("open file");
+    exit(-1);
+  }
+  time_t now;
+  char timestr[40];
+  now = time(NULL);
+  Node *current1=user;
+  //通过localtime将time_t转为一个包含时间的结构体并返回指针
+  struct tm *nowtime = localtime(&now);
+  // printf("月份：%d 天数:%d %d:%d:%d
+  // 星期%d",nowtime->tm_mon+1,nowtime->tm_mday,nowtime->tm_hour,nowtime->tm_min,nowtime->tm_sec,nowtime->tm_wday);
+  //  char timestr[40];
+  strftime(timestr, 40, "%Y-%m-%d %H:%M:%S", nowtime);
+  // printf("%d %s\n",len,timestr);
+  char *arr = shownodeData(current1, logind);
+  //  printf("%s %s %s\n",arr,timestr,status);
+  fprintf(writelogfp, "%s %s %s\n", arr, status, timestr);
+  fclose(writelogfp);
+  writelogfp = NULL;
+}
+
+
 
 
 

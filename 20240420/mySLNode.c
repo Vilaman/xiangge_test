@@ -19,7 +19,7 @@ void Insertnode(Node **phead,typenode *data,int index);
 int sumNode(Node *phead);
 void Changenode(Node **phead, typenode* data, int index);
 void DelNode(Node **phead,int index);
-void shownodeData(Node *phead, int index);
+char *shownodeData(Node *phead, int index);
 int isDataexist(Node *phead, char *name,char *pass);
 void Nodefree(Node **phead);
 
@@ -149,30 +149,30 @@ void Changenode(Node **phead, typenode* data, int index) {
 }
 
 //查看下标对应的数据
-void shownodeData(Node *phead, int index) {
+char *shownodeData(Node *phead, int index) {
 
   if (phead == NULL) {
     printf("当前链表不存在数据\n");
-    return;
+    return NULL;
   }
   int count = sumNode(phead);
   if (index > count - 1 || index < 0) {
     printf("当前下标不存在\n");
-    return;
+    return NULL;
   }
   Node *cur = phead;
   for (int i = 0; i < index ; i++) {
     cur = cur->next;
   }
-  printf("当前%d下标的值为%s\n",index, cur->data->username);
-  return;
+//  printf("当前%d下标的值为%s\n",index, cur->data->username);
+  return cur->data->username;
 }
 
 //判断数据是否存在链表中并返回当前下标
 int isDataexist(Node *phead, char *loginname,char *loginpass) {
 int logindex = -1;
   if (phead == NULL) {
-    printf("当前链表不存在数据\n");
+    printf("当前没有用户\n");
     return -1;
   }
   Node *cur = phead;
