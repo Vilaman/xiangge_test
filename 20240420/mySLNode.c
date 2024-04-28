@@ -23,7 +23,6 @@ void shownodeData(Node *phead, int index);
 int isDataexist(Node *phead, char *name,char *pass);
 void Nodefree(Node **phead);
 
-int logindex = -1;
 
 //初始化newnode
 Node *initnode(typenode *data) {
@@ -171,13 +170,14 @@ void shownodeData(Node *phead, int index) {
 
 //判断数据是否存在链表中并返回当前下标
 int isDataexist(Node *phead, char *loginname,char *loginpass) {
+int logindex = -1;
   if (phead == NULL) {
     printf("当前链表不存在数据\n");
     return -1;
   }
   Node *cur = phead;
   do {
-    logindex++;
+   logindex++;
     /*  if (cur->data == data) {
         printf("当前数据%s存在链表中对应的下标为%d\n",data，count);
             return true;
@@ -193,7 +193,7 @@ int isDataexist(Node *phead, char *loginname,char *loginpass) {
   } while (cur != NULL);
 
 //  printf("当前数据%s不存在链表中\n", data);
-  return logindex;
+  return -1;
 }
 
 //清空链表

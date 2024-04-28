@@ -22,7 +22,7 @@ int line=0;
 int main() {
   User *u=NULL;
 
-  FILE *readpf = fopen("message.txt", "r");
+  FILE *readpf = fopen("1.txt", "r");
   if (readpf == NULL) {
 
     perror("fopen()");
@@ -40,9 +40,10 @@ int main() {
     return 0;
   }
   u=(User *)malloc(line*sizeof(User));
+  fseek(readpf,0,SEEK_SET);
  // for (int i = 0; i < count; i++) {
-    fscanf(readpf, "%s %s %s %d\n", u[0].username, u[0].password, u[0].sex, &u[0].age);
-    printf(" 初始化：%s %s %s %d\n",u[0].username, u[0].password, u[0].sex, u[0].age);
+   int i= fscanf(readpf, "%s %s %s %d\n", u[0].username, u[0].password, u[0].sex, &u[0].age);
+    printf(" 初始化：%d %s %s %s %d\n",i,u[0].username, u[0].password, u[0].sex, u[0].age);
 //    appendNode(&user, u);//初始化链表
 //  }
 
