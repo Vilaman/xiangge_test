@@ -27,7 +27,8 @@ void UserWrite(User *u);
 void regIster();
 void DelUser();
 void writeTolog(char *status);
-
+void ChangePass();
+void ChangeData();
 
 
 
@@ -90,10 +91,10 @@ void menutwo() {
 	writeTolog(statusshow);
       break;
     case '2':
-      //    ChangePass();
+    ChangePass();
       break;
     case '3':
-      //   ChangeData();
+	  ChangeData();
       break;
     case '4':
 //	  printf("下标 %d\n",logind);
@@ -250,6 +251,7 @@ void regIster(){
 	line++;
 
 	printf("注册成功\n");
+
 	return;
 }
 
@@ -258,16 +260,34 @@ void regIster(){
 
 
 void ChangePass(){
+	User *u2=shownodeData(user,logind);
+	char newpass[20];
+	char newpasswd[20];
+	printf("请输入你的当前密码\n");
+	scanf(" %s",newpass);
+	if(strcmp(newpass,u2->password)!=0){
 
-
+		printf("密码错误,修改失败\n");
+		return;
+	}
+	printf("请输入你的新密码\n");
+	scanf(" %s",newpasswd);
+	strcpy(u2->password,newpasswd);
+	printf("修改成功\n");
 
 }
 
 
 
-void ChageData(){
-
-
+void ChangeData(){
+User *u3=shownodeData(user,logind);
+printf("请输入你的新用户名\n");
+scanf(" %s",u3->username);
+printf("请输入你要修改的性别\n");
+scanf(" %s",u3->sex);
+printf("请输入你的年龄\n");
+scanf(" %d",&u3->age);
+puts("修改成功");
 
 }
 
@@ -319,9 +339,9 @@ void writeTolog(char *status) {
   //  char timestr[40];
   strftime(timestr, 40, "%Y-%m-%d %H:%M:%S", nowtime);
   // printf("%d %s\n",len,timestr);
-  char *arr = shownodeData(current1, logind);
+  User *arr = shownodeData(current1, logind);
   //  printf("%s %s %s\n",arr,timestr,status);
-  fprintf(writelogfp, "%s %s %s\n", arr, status, timestr);
+  fprintf(writelogfp, "%s %s %s\n", arr->username, status, timestr);
   fclose(writelogfp);
   writelogfp = NULL;
 }
