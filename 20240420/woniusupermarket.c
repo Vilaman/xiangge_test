@@ -69,7 +69,7 @@ void appendProduct(Node **phead,Product *p);
 void choserole();
 void customer();
 void administrator();
-void showAllproduction(Node *phead);
+bool showAllproduction(Node *phead);
 void AddProduct(Node **phead);
 void changeProduct(Node **phead);
 void delProduct(Node **phead);
@@ -148,7 +148,7 @@ void Productinit(){
 	fseek(goodfd,0,SEEK_SET);
 	for(int i=0;i<line;i++){
 		fscanf(goodfd,"%d %s %f %d",&p[i].id,p[i].name,&p[i].price,&p[i].sales);
-		printf("%s %d %f %d",p[i].name,p[i].id,p[i].price,p[i].sales);
+	//	printf("%s %d %f %d",p[i].name,p[i].id,p[i].price,p[i].sales);
 		appendProduct(&pt,(p+i));  //初始化商品清单
 
 	}
@@ -194,7 +194,7 @@ void appendProduct(Node **phead,Product *p){
 
 //选择登录角色
 void choserole() {
-  bool ischose = true;
+//  bool ischose = true;
   do {
     puts("请选择你的登录角色");
     puts("1.顾客  2.管理员");
@@ -213,7 +213,7 @@ void choserole() {
       puts("请输入正确的选项");
       break;
     }
-  } while (1);
+  } while (true);
 }
 
 
@@ -288,16 +288,17 @@ void administrator(){
 }
 
 //管理员查看所有商品
-void showAllproduction(Node *phead){
+bool showAllproduction(Node *phead){
 	if(phead==NULL){
 		puts("当前没有商品");
-		return;
+		return false;
 	}
 	Node *tail=phead;
 	while(tail !=NULL){
 		printf("商品编号:%d 商品名称:%s 商品单价:%.2f 商品销量:%d\n",tail->product->id,tail->product->name,tail->product->price,tail->product->sales);
 		tail=tail->Next;
 	}
+	return true;
 }
 
 
@@ -365,38 +366,57 @@ if(!ischange){
 
 
 //删除商品
-void delProduct(Node **phead){
-	int delid;
-	if(*phead==NULL){
-		puts("当前不存在商品");
-		return;
-	}
-	puts("请输入你要删除的商品编号");
-	scanf(" %d",&delid);
-	Node *Del=*phead;
-	while(Del!=NULL){
-		if(Del->product->id==delid){
-			break;
-		}
-		Del=Del->Next;
-	}
-	Node *nextnode=Del;
-	Del=Del->Next;
-	free(nextnode);
-	nextnode=NULL;
-	FILE *delfd=fopen("goods.txt","w");
-	if(delfd==NULL){
-		perror("delProduct()");
-		exit(3);
-	}
-/*	Node *current=*phead;
-	while(current!=NULL){
-		fprintf(delfd,"%d %s %.2f %d",current->product->id,current->product->name,current->product->price,current->product->sales);
-		current=current->Next;
-	}*/
-	fclose(delfd);
-	delfd=NULL;
-	return;
+void delProduct(Node **phead) {
+  int delid;
+  if (*phead == NULL) {
+    puts("当前不存在商品");
+    return;
+  }
+  puts("请输入你要删除的商品编号");
+  scanf(" %d", &delid);
+  if ((*phead)->Next == NULL) {//当商品列表只有一个的时候
+    if ((*phead)->product->id == delid) {
+      free(*phead);
+	  *phead=NULL;
+    }
+  } else {
+    Node *Del = *phead;
+    Node *Now = NULL;
+    int count = 0; //定义一个循环次数拿到查找的次数
+    while (Del->Next != NULL) {
+      count++;
+      if (Del->product->id == delid) {
+        break;
+      }
+      Del = Del->Next;
+    }
+    if (count == 1) {
+      Now = Del;
+      *phead = Del->Next;
+      free(Now);
+      Now = NULL;
+    } else {
+      Node *nextnode = Del;
+      Del = Del->Next;
+      free(nextnode);
+      nextnode = NULL;
+    }
+  }
+  FILE *delfd = fopen("goods.txt", "w");
+  if (delfd == NULL) {
+    perror("delProduct()");
+    exit(3);
+  }
+  Node *current = *phead;
+  while (current != NULL) {
+    fprintf(delfd, "%d %s %.2f %d", current->product->id,
+            current->product->name, current->product->price,
+            current->product->sales);
+    current = current->Next;
+  }
+  fclose(delfd);
+  delfd = NULL;
+  return;
 }
 
 //管理员登录功能
@@ -432,7 +452,7 @@ void showShopping(P_Node *phead){
 
 //购买商品添加到购物车
 void buyGoods(P_Node **sphead, Node *phead) {
-  showAllproduction(phead); //查看所有商品信息
+  if(showAllproduction(phead)){//查看所有商品信息
   Shopping *sp = (Shopping *)malloc(sizeof(Shopping));
   puts("请输入你要购买的商品编号");
   int buyid;
@@ -443,7 +463,6 @@ void buyGoods(P_Node **sphead, Node *phead) {
   bool isshop = false;
   while (current != 0) {
     if (buyid == current->product->id) {
-      current->product->sales++;
       isexsit = true;
       strcpy(sp->goods, current->product->name);
       break;
@@ -453,6 +472,7 @@ void buyGoods(P_Node **sphead, Node *phead) {
   if (isexsit) {
     puts("请输入购买的数量");
     scanf(" %d", &sp->num);
+    current->product->sales+=sp->num;
     while (tail != NULL) {
       if (strcmp(tail->shopping->goods, sp->goods) == 0) {
         isshop = true;
@@ -470,6 +490,10 @@ void buyGoods(P_Node **sphead, Node *phead) {
   } else {
     puts("你输入的编号不存在");
     return;
+  }
+  }
+  else{
+	puts("等待管理员添加商品");
   }
   return;
 }
