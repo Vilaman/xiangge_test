@@ -126,7 +126,7 @@ char *checkData(char *data) {
     }
   } else if (!isLogin) {
     if (strcmp(data, user[loginIndex].password) == 0) {
-      puts(user[loginIndex].password);
+ //     puts(user[loginIndex].password);
       isLogin = true;
 	  ismenu=false;
       return "loginsuccess";
@@ -134,7 +134,7 @@ char *checkData(char *data) {
   } else if (!ismenu) {
 
 	if(strcmp(data,"showcard")==0){
-		printf("%s %s",user[loginIndex].card,user[loginIndex].password);
+//		printf("%s %s",user[loginIndex].card,user[loginIndex].password);
 		sprintf(big,"%s %s",user[loginIndex].card,user[loginIndex].password);
 		return big;
 	}else if(!ischangePass){
