@@ -87,6 +87,10 @@ void Addcapacity(List *list) {
   //for (int i = 0; i < list->lenth; i++) {
    // newspace[i] = list->arr[i];
  // } //复制旧数据到新空间
+if(newspace==NULL){
+	perror("realloc");
+	exit(1);
+}
   free(list->arr);
   list->arr = newspace;
   printf("扩容成功，当前容量为%d\n", list->capacity);
