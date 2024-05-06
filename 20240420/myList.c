@@ -83,10 +83,10 @@ int QueryData(List *list,Emp emp) {
 //扩容
 void Addcapacity(List *list) {
   list->capacity *= 2;
-  Emp *newspace = (Emp *)malloc(list->capacity * sizeof(Emp));
-  for (int i = 0; i < list->lenth; i++) {
-    newspace[i] = list->arr[i];
-  } //复制旧数据到新空间
+  Emp *newspace = (Emp *)realloc(list->arr,list->capacity * sizeof(Emp));
+  //for (int i = 0; i < list->lenth; i++) {
+   // newspace[i] = list->arr[i];
+ // } //复制旧数据到新空间
   free(list->arr);
   list->arr = newspace;
   printf("扩容成功，当前容量为%d\n", list->capacity);
