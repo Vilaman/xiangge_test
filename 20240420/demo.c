@@ -22,14 +22,12 @@ typedef struct {
   short age;//2
   char name[64];//64
   char pass[16];//16
-} User; //
+} User; //定义一个结构体全局变量
 
 void demo();
 
 int main() {
-	User *users = (User *)calloc(10, sizeof(User));//堆中
-	int size=sizeof(User);
-	printf("%d\n",size);
+	User *users = (User *)calloc(10, sizeof(User));//在堆中申请10个User大小的空间
 	int a = 1;//保存在栈中的局部变量
 	a = 2;//a值变为2
 	short b = 3; //保存在栈中的局部变量 short型
