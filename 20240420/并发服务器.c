@@ -123,7 +123,7 @@ void writetoLog(char *info){
 	time_t t=time(NULL);
 	struct tm *now=localtime(&t);
 	char timestr[40];
-	strftime(timestr,sizeof(timestr)-1,"%y年%m月%d日 %H:%M:%S\n",now);
+	strftime(timestr,sizeof(timestr)-1,"%y年%m月%d日 %H:%M:%S",now);
 	timestr[strlen(timestr)]='\0';
 	fprintf(pf,"%s %s %s\n",info,timestr,status);
 	puts("写入日志成功");
