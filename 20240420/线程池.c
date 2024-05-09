@@ -46,10 +46,40 @@ typedef struct pool{
 	task_queue *queue;//任务队列结构体指针  通过队列来控制任务执行 先来先执行
 }pthread_pool;
 
+pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
+void pool_init(pthread_pool *pool,int thread_count,int queue_size);
+void task_queue_init(task_queue *queue,int max_size);
+void pool_add_task(pthread_pool *pool,void *(*fun)(void *),void *args);
+void task_queue_add(pthread_pool *pool,task t);
+task task_queue_get(task_queue *queue);
+void *worker(void *args);
+void pthread_pool_destroy(pthread_pool *pool);
+void task_queue_destroy(task_queue *queue);
+
+int num=1;
+void *demo(){
+	num++;
+	printf("test函数%d\n",num);
+	return NULL;
+}
 
 
 int main(){
-
+	pthread_pool pool;
+	pool_init(&pool,5,10);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pool_add_task(&pool,demo,NULL);
+	pthread_pool_destroy(&pool);
     return 0;
 }
 
@@ -95,7 +125,7 @@ void task_queue_init(task_queue *queue,int max_size){
 	queue->tasks=(task *)malloc(sizeof(task)*max_size);
 	queue->rear=queue->front=-1;//因为此时队列中没有数据因此首尾下标都为-1
 	queue->count=0;
-	queue->max->size=max_size;
+	queue->max_size=max_size;
 	return;
 }
 
@@ -134,7 +164,7 @@ void task_queue_add(pthread_pool *pool,task t){
 
 		queue->rear++;
 	}
-	queue->tasks[queue-rear]=task;
+	queue->tasks[queue->rear]=t;
 	//任务个数+1
 	queue->count++;
 	//任务量+1  及要执行的任务个数
@@ -166,4 +196,63 @@ task task_queue_get(task_queue *queue){
 	}
 	pthread_mutex_unlock(&mutex);
 	return t;
+}
+
+//线程工作函数
+void *worker(void *args){
+//如果传入的pthread_pool线程池的结构体指针为空(在初始化的时候已经传过pool)
+	if(args==NULL){
+		perror("pool为空");
+		return NULL;
+	}
+	pthread_pool *pool=(pthread_pool *)args;
+	while(true){
+//当前要执行在排队的任务量减一及执行一次减一次那么相对应的workers空闲量就会加一
+		sem_wait(&pool->sem_tasks);
+		task t=task_queue_get(pool->queue);
+		//当要执行的函数指针不为空
+		if(t.fun!=NULL){
+			t.fun(t.args);//执行函数
+		}
+		sem_post(&pool->sem_workers);
+	}
+	if(pool->queue->count==0){
+
+		printf("当前没有排队的任务\n");
+	}
+	return NULL;
+}
+
+//销毁线程池
+/*通知所有工作线程退出循环
+等待所有工作线程结束。
+清理资源，包括释放信号量、销毁线程数组和任务队列*/
+
+void pthread_pool_destroy(pthread_pool *pool){
+//??
+for(int i=0;i<pool->threadCount;i++){
+	pthread_join(pool->pids[i],NULL);
+}
+free(pool->pids);
+pool->pids=NULL;
+//销毁任务数
+sem_destroy(&pool->sem_tasks);
+//销毁空闲任务数
+sem_destroy(&pool->sem_workers);
+//释放队列
+task_queue_destroy(pool->queue);
+//释放pool
+free(pool);
+pool=NULL;
+return;
+}
+
+//释放队列
+void task_queue_destroy(task_queue *queue){
+
+	free(queue->tasks);
+	queue->tasks=NULL;
+	free(queue);
+	queue=NULL;
+	return;
 }
