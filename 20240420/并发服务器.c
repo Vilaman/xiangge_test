@@ -17,6 +17,7 @@
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<pthread.h>
+#include<semaphore.h>
 
 
 #define PORT 8088
@@ -26,6 +27,8 @@ typedef struct Client{
 	int port;
 	int fd;
 }Client;
+
+sem_t sem;
 
 void *hanleclient(void *args);
 void writetoLog(char *info);
@@ -60,7 +63,7 @@ int main(){
 	struct sockaddr_in client;
 	socklen_t len=sizeof(client);
 	while((clientfd=accept(server_fd,(struct sockaddr *)&client,&len))>0){
-
+		sem_init(&sem,0,1);
 		puts("已接收客户端链接");
 		Client *c=(Client *)malloc(sizeof(Client));
 		char *uip=inet_ntoa(client.sin_addr);
@@ -70,14 +73,12 @@ int main(){
 		c->fd=clientfd;
 
 		printf("接收到来自:%s:%d的连接\n",c->ip,c->port);
-		char big[60];
-		sprintf(big,"%s:%d",c->ip,c->port);
-		writetoLog(big);
 		if(pthread_create(&pid,NULL,hanleclient,c)!=0){
 
 			puts("创建连接失败");
 			exit(1);
-		}
+		}	
+		sem_destroy(&sem);
 
 		puts("等待下一位连接");
 	}
@@ -90,31 +91,32 @@ close(server_fd);
 
 
 
-void *hanleclient(void *args){
-	int clientfd=((Client *)args)->fd;
-	pthread_t tid=pthread_self();
-	pthread_detach(tid);
-	int readcount;
-	char data[101];
-	while((readcount=read(clientfd,data,sizeof(data)-1))>0){
+void *hanleclient(void *args) {
+  int clientfd = ((Client *)args)->fd;
+  pthread_t tid = pthread_self();
+  pthread_detach(tid);
+  char big[60];
+  sprintf(big, "%s:%d", ((Client *)args)->ip, ((Client *)args)->port);
+  writetoLog(big);
+  int readcount;
+  char data[101];
+  printf("客户端%d连接\n", clientfd);
+  while ((readcount = read(clientfd, data, sizeof(data) - 1)) > 0) {
 
-		data[readcount]='\0';
-		printf("服务器接收数据:%s\n",data);
-	}
-	puts("客户端下线");
-	free(args);
-	args=NULL;
-	pthread_exit(NULL);
-
+    data[readcount] = '\0';
+    printf("服务器接收数据:%s\n", data);
+  }
+  puts("客户端下线");
+  free(args);
+  args = NULL;
+  pthread_exit(NULL);
 }
 
 
 
 void writetoLog(char *info){
-
-	pthread_t ppid=pthread_self();
-	pthread_detach(ppid);
-	FILE *pf=fopen("connectlog.txt","a+");
+	sem_wait(&sem);
+	FILE *pf=fopen("connectlog.txt","a");
 	if(pf==NULL){
 		perror("fopen");
 		exit(2);
@@ -129,4 +131,5 @@ void writetoLog(char *info){
 	puts("写入日志成功");
 	fclose(pf);
 	pf=NULL;
+	sem_post(&sem);
 }
