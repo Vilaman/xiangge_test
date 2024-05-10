@@ -34,7 +34,7 @@ void writetoLog(char *info);
 
 int main(){
 	pthread_pool pool;
-	pool_init(&pool,5,10);
+	pool_init(&pool,2,10);
 	int clientfd;
 	int server_fd=socket(AF_INET,SOCK_STREAM,0);
 	if(server_fd<0){
@@ -92,7 +92,6 @@ close(server_fd);
 
 
 void *hanleclient(void *args) {
-	puts("test");
   int clientfd = ((Client *)args)->fd;
   pthread_t tid = pthread_self();
   pthread_detach(tid);
@@ -100,6 +99,7 @@ void *hanleclient(void *args) {
   sprintf(big, "%s:%d", ((Client *)args)->ip, ((Client *)args)->port);
   writetoLog(big);
   int readcount;
+  int writecount;
   char data[101];
   printf("客户端%d连接\n", clientfd);
   while ((readcount = read(clientfd, data, sizeof(data) - 1)) > 0) {

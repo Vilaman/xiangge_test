@@ -18,6 +18,7 @@
 #include<netinet/in.h>
 #include<pthread.h>
 #include<semaphore.h>
+#include<sys/wait.h>
 
 
 #define PORT 8088
@@ -35,7 +36,7 @@ void writetoLog(char *info);
 
 int main(){
 
-	pthread_t pid;
+	pthread_t pid1;
 	int clientfd;
 	int server_fd=socket(AF_INET,SOCK_STREAM,0);
 	if(server_fd<0){
@@ -73,14 +74,21 @@ int main(){
 		c->fd=clientfd;
 
 		printf("接收到来自:%s:%d的连接\n",c->ip,c->port);
-		if(pthread_create(&pid,NULL,hanleclient,c)!=0){
-
-			puts("创建连接失败");
-			exit(1);
-		}	
+		puts("等待下一位连接");
+	//	if(pthread_create(&pid,NULL,hanleclient,c)!=0){
+//
+//			puts("创建连接失败");
+//			exit(1);
+//		}	
+		int pid=fork();
+		if(pid>0){
+			close(clientfd);
+		}else if(pid==0){
+			hanleclient(c);
+			exit(0);
+		}
 		sem_destroy(&sem);
 
-		puts("等待下一位连接");
 	}
 	
 
