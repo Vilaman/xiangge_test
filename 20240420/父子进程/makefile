@@ -5,7 +5,7 @@ RF=-rf
 EXE=simple
 $(EXE):debug clean
 debug:
-	@$(CC) -o $(LX) pthread_pool.c $(LX).c -lpthread
+	@$(CC) -o $(LX) $(LX).c -lpthread
 	@./$(LX)
 clean:
 	@$(RM) $(RF) $(LX)

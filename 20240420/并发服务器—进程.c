@@ -18,7 +18,8 @@
 #include<netinet/in.h>
 #include<pthread.h>
 #include<semaphore.h>
-#include"pthread_pool.h"
+
+
 #define PORT 8088
 
 typedef struct Client{
@@ -33,8 +34,8 @@ void *hanleclient(void *args);
 void writetoLog(char *info);
 
 int main(){
-	pthread_pool pool;
-	pool_init(&pool,5,10);
+
+	pthread_t pid;
 	int clientfd;
 	int server_fd=socket(AF_INET,SOCK_STREAM,0);
 	if(server_fd<0){
@@ -72,12 +73,11 @@ int main(){
 		c->fd=clientfd;
 
 		printf("接收到来自:%s:%d的连接\n",c->ip,c->port);
-/*		if(pthread_create(&pid,NULL,hanleclient,c)!=0){
+		if(pthread_create(&pid,NULL,hanleclient,c)!=0){
 
 			puts("创建连接失败");
 			exit(1);
-		}	*/
-		pthread_pool_add_task(&pool,hanleclient,c);
+		}	
 		sem_destroy(&sem);
 
 		puts("等待下一位连接");
@@ -92,7 +92,6 @@ close(server_fd);
 
 
 void *hanleclient(void *args) {
-	puts("test");
   int clientfd = ((Client *)args)->fd;
   pthread_t tid = pthread_self();
   pthread_detach(tid);

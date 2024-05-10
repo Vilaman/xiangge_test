@@ -34,7 +34,7 @@ typedef struct queue{
 	int rear;
 	int count;//队列添加的要执行的任务个数
 	int max_size;//队列能添加的最大排队个数
-	task *tasks;//指向任务数组的第一个地址  需要添加的任务
+	task *tasks;//指向任务数组的第一个地址  需要添加的任务函数
 }task_queue;
 
 //定义线程池结构体
@@ -47,6 +47,8 @@ typedef struct pool{
 }pthread_pool;
 
 pthread_mutex_t mutex=PTHREAD_MUTEX_INITIALIZER;
+
+
 void pool_init(pthread_pool *pool,int thread_count,int queue_size);
 void task_queue_init(task_queue *queue,int max_size);
 void pool_add_task(pthread_pool *pool,void *(*fun)(void *),void *args);
@@ -228,23 +230,23 @@ void *worker(void *args){
 等待所有工作线程结束。
 清理资源，包括释放信号量、销毁线程数组和任务队列*/
 
-void pthread_pool_destroy(pthread_pool *pool){
-//??
-for(int i=0;i<pool->threadCount;i++){
-	pthread_join(pool->pids[i],NULL);
-}
-free(pool->pids);
-pool->pids=NULL;
-//销毁任务数
-sem_destroy(&pool->sem_tasks);
-//销毁空闲任务数
-sem_destroy(&pool->sem_workers);
-//释放队列
-task_queue_destroy(pool->queue);
-//释放pool
-free(pool);
-pool=NULL;
-return;
+void pthread_pool_destroy(pthread_pool *pool) {
+  //??
+  for (int i = 0; i < pool->threadCount; i++) {
+    pthread_join(pool->pids[i], NULL);
+  }
+  free(pool->pids);
+  pool->pids = NULL;
+  //销毁任务数
+  sem_destroy(&pool->sem_tasks);
+  //销毁空闲任务数
+  sem_destroy(&pool->sem_workers);
+  //释放队列
+  task_queue_destroy(pool->queue);
+  //释放pool
+  free(pool);
+  pool = NULL;
+  return;
 }
 
 //释放队列
