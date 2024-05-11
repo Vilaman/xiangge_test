@@ -23,11 +23,10 @@
 
 #define PORT 8088
 
-typedef struct Client{
-	char ip[50];
-	int port;
-	int fd;
-}Client;
+typedef struct Client {
+  struct sockaddr_in info;
+  int fd;
+} Client;
 
 sem_t sem;
 
@@ -69,11 +68,10 @@ int main(){
 		Client *c=(Client *)malloc(sizeof(Client));
 		char *uip=inet_ntoa(client.sin_addr);
 		int uport=ntohs(client.sin_port);
-		strcpy(c->ip,uip);
-		c->port=uport;
+		c->info=client;
 		c->fd=clientfd;
 
-		printf("接收到来自:%s:%d的连接\n",c->ip,c->port);
+		printf("接收到来自:%s:%d的连接\n",uip,uport);
 		puts("等待下一位连接");
 	//	if(pthread_create(&pid,NULL,hanleclient,c)!=0){
 //
@@ -90,6 +88,15 @@ int main(){
 		sem_destroy(&sem);
 
 	}
+	int writecount;
+	char input[100]="erwrewtwtffffds";
+
+	writecount=write(clientfd,input,sizeof(input));
+	if(writecount>0){
+		puts("发送成功");
+		puts(input);
+	}
+
 	
 
 close(server_fd);
@@ -103,8 +110,11 @@ void *hanleclient(void *args) {
   int clientfd = ((Client *)args)->fd;
   pthread_t tid = pthread_self();
   pthread_detach(tid);
+  Client *c=(Client*)(args);
+  char *ip=inet_ntoa(c->info.sin_addr);
+  int port=htons(c->info.sin_port);
   char big[60];
-  sprintf(big, "%s:%d", ((Client *)args)->ip, ((Client *)args)->port);
+  sprintf(big, "%s:%d", ip, port);
   writetoLog(big);
   int readcount;
   char data[101];

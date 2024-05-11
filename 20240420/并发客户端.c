@@ -19,6 +19,9 @@
 #include<pthread.h>
 #define PORT 8088
 
+
+
+
 int main(){
 
 	int client_fd=socket(AF_INET,SOCK_STREAM,0);
@@ -61,6 +64,19 @@ int main(){
 		}
 
 	}
+	int readcount;
+	char data[101];
+	readcount=read(client_fd,data,sizeof(data)-1);
+	if(readcount>0){
+
+		data[readcount]='\0';
+		puts(data);
+	}else{
+
+		puts("服务器下线");
+	}
+
+
 	close(client_fd);
 
     return 0;
