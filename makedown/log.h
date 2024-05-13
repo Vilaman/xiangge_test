@@ -13,9 +13,9 @@ public:
 		return &instance;
 	}
 	void write_log(int level, const char* format, ...);
-
 private:
 	locker m_mutex;
+	FILE *m_fp;         //打开log的文件指针
 };
 
 #define LOG_DEBUG(format, ...) {log::get_instance()->write_log(0, format, ##__VA_ARGS__);}
