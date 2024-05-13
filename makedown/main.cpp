@@ -1,28 +1,26 @@
-#include <iostream>
+﻿#include <iostream>
 #include <pthread.h>
 #include <unistd.h>
 #include "block_queue.h"
+#include "log.h"
 
 // 生产者线程函数
 void* producer(void* arg) {
     block_queue<int>* queue = static_cast<block_queue<int>*>(arg);
-    int item = 0;
-    while (true) {
+    for (int item = 0; item < 20; item++) {
         queue->push(item);
-        printf("+++++++++++++++++生产者产生数据i = %d\n", item);
-        item++;
-        usleep((rand()%5 + 1) * 50000);
+        LOG_INFO("生产者产生数据i = %d", item);
+        usleep((rand() % 5 + 1) * 50000);
     }
     return nullptr;
 }
 
 // 消费者线程函数
-void* consumer(void* arg){
+void* consumer(void* arg) {
     block_queue<int>* queue = static_cast<block_queue<int>*>(arg);
-    int item;
-    while (true) {
+    for (int item = 0; item < 20; item++) {
         queue->pop(item);
-        printf("-----消费者处理数据i = %d\n", item);
+        LOG_INFO("消费者处理数据i = %d", item);
     }
     return nullptr;
 }
@@ -34,6 +32,5 @@ int main() {
     pthread_create(&tid_cons, nullptr, consumer, &queue);
     pthread_join(tid_prod, nullptr);
     pthread_join(tid_cons, nullptr);
-
     return 0;
 }
