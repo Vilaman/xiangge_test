@@ -166,6 +166,7 @@ int showone(void *NotUsed, int argc, char **argv, char **azColName) {
   return 0;
 }
 
+
 void searchLike() {
   char sql[100] = {0};
   char name[30];

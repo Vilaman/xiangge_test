@@ -20,11 +20,9 @@
 #include <unistd.h>
 #include <wait.h>
 #include<sys/msg.h>
+#include<sqlite3.h>
 
 #define NUM 10 //最大群聊数量
-void *handleClient(void *);
-void *sendAll(void *);
-void saveLog(char *);
 
 
 typedef struct Client {
@@ -40,6 +38,9 @@ typedef struct message{
 	int port;
 }message;
 
+void *handleClient(void *);
+void *sendAll(void *);
+void saveLog(Client *c);
 Client *clients; //数组
 
 
@@ -171,6 +172,8 @@ void *handleClient(void *args) {
   pthread_t pid = pthread_self();
   pthread_detach(pid); //设置为分离线程
   Client *c = (Client *)args;
+  char *ip = inet_ntoa(c->info.sin_addr);
+  int port = ntohs(c->info.sin_port);
   printf("线程处理客户端:%d\n", c->fd);
   //保存日志记录
   //上锁
@@ -232,12 +235,10 @@ void *handleClient(void *args) {
 }*/
 
 
-void addlogwithsql(Client *c) {
+void saveLog(Client *c) {
   char *ip = inet_ntoa(c->info.sin_addr);
   int port = ntohs(c->info.sin_port);
   //-----日志处理
-  //生成要保存的日志字符串
-  char timestr[100] = "";
   //获取时间字符串
   char *type = "LOGIN";
   time_t now = time(NULL);
@@ -246,17 +247,29 @@ void addlogwithsql(Client *c) {
   strftime(tempstr, sizeof(tempstr) - 1, "%Y-%m-%d %H:%M:%S", t);
   sqlite3 *db;
   int rc;
-  char *err_meagger;
-  rc=sqlite3_open("./test.db",&db);
+  char *err_message;
+  rc=sqlite3_open("test.db",&db);
   if(rc!=SQLITE_OK){
 	perror("open()");
 	return;
   }
   char sql[200];
+  sprintf(sql,"insert into logs (ip,port,type,time) values ('%s','%d','%s','%s')",ip,port,type,tempstr);
+  rc=sqlite3_exec(db,sql,NULL,NULL,&err_message);
+  if(rc!=SQLITE_OK){
+	perror("exec()");
+	return;
+  }
+	int count=sqlite3_changes(db);
+	if(count>0){
 
+		puts("写入日志成功");
+	}else{
 
+		puts("写入日志失败");
+	}
+	sqlite3_close(db);
 
-
-
+return;
 
 }
