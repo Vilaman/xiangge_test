@@ -172,22 +172,10 @@ void *handleClient(void *args) {
   pthread_detach(pid); //设置为分离线程
   Client *c = (Client *)args;
   printf("线程处理客户端:%d\n", c->fd);
-  char *ip = inet_ntoa(c->info.sin_addr);
-  int port = ntohs(c->info.sin_port);
-  //-----日志处理
-  //生成要保存的日志字符串
-  char timestr[100] = "";
-  //获取时间字符串
-  time_t now = time(NULL);
-  struct tm *t = localtime(&now);
-  char tempstr[30];
-  strftime(tempstr, sizeof(tempstr) - 1, "%Y-%m-%d %H:%M:%S", t);
-  snprintf(timestr, sizeof(timestr) - 1, "客户端IP：%s,端口号：%d LOGIN %s", ip,
-           port, tempstr);
   //保存日志记录
   //上锁
   pthread_mutex_lock(&mutex);
-  saveLog(timestr);
+  saveLog(c);
   //解锁
   pthread_mutex_unlock(&mutex);
   //-----
@@ -227,7 +215,9 @@ void *handleClient(void *args) {
   // pthread_exit(NULL);
   return NULL;
 }
-void saveLog(char *str) {
+
+
+/*void saveLog(char *str) {
   // 1.打开文件，追加模式
   FILE *fp = fopen("clientlog.txt", "a");
   if (fp == NULL) {
@@ -239,4 +229,34 @@ void saveLog(char *str) {
   // 3关闭
   fclose(fp);
   puts("写入日志成功");
+}*/
+
+
+void addlogwithsql(Client *c) {
+  char *ip = inet_ntoa(c->info.sin_addr);
+  int port = ntohs(c->info.sin_port);
+  //-----日志处理
+  //生成要保存的日志字符串
+  char timestr[100] = "";
+  //获取时间字符串
+  char *type = "LOGIN";
+  time_t now = time(NULL);
+  struct tm *t = localtime(&now);
+  char tempstr[30];
+  strftime(tempstr, sizeof(tempstr) - 1, "%Y-%m-%d %H:%M:%S", t);
+  sqlite3 *db;
+  int rc;
+  char *err_meagger;
+  rc=sqlite3_open("./test.db",&db);
+  if(rc!=SQLITE_OK){
+	perror("open()");
+	return;
+  }
+  char sql[200];
+
+
+
+
+
+
 }
