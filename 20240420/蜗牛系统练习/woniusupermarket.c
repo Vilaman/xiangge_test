@@ -383,7 +383,7 @@ void delProduct(Node **phead) {
     Node *Del = *phead;
     Node *Now = NULL;
     int count = 0; //定义一个循环次数拿到查找的次数
-    while (Del->Next != NULL) {
+    while (Del!= NULL) {
       count++;
       if (Del->product->id == delid) {
         break;
