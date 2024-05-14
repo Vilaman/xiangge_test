@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "block_queue.h"
 #include "log.h"
+#include "sql_connection_pool.h"
 
 // 生产者线程函数
 void* producer(void* arg) {

@@ -7,12 +7,13 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "${file}", 
-                "${fileDirname}/log.cpp", 
-                "${fileDirname}/timestamp.cpp", 
+                "*.cpp",//"${file}", 
+                //"${fileDirname}/log.cpp", 
+                //"${fileDirname}/timestamp.cpp", 
                 "-I${workspaceFolder}",
                 "-lstdc++",
                 "-lpthread",
+                "-lmysqlclient",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}" 
             ],

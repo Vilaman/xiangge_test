@@ -12,19 +12,19 @@
 #include "log.h"
 
 // 数据库连接池
-class connetion_pool{
+class connection_pool {
 public:
-    MYSQL *Getconnection();                 //获取数据库连接
-    bool releaseConnection(MYSQL *conn);    //释放连接
+    MYSQL* GetConnection();                 //获取数据库连接
+    bool releaseConnection(MYSQL* conn);    //释放连接
     int GetFreeConn();                      //获取连接
     void DestroyPool();                     //销毁所有连接
     //单例模式
-    static connetion_pool *Getconnection();
+    static connection_pool* GetInstance();
     //初始化
-    void init(std::string url,std::string User, std::string PassWord, std::string DataBaseName, int Port, int MaxConn);
+    void init(std::string url, std::string User, std::string PassWord, std::string DataBaseName, int Port, int MaxConn);
 private:
-    connetion_pool();
-    ~connetion_pool();
+    connection_pool();
+    ~connection_pool();
     int m_MaxConn;              //最大连接数
     int m_CurConn;              //当前已使用的连接数
     int m_FreeConn;             //当前空闲的连接数
@@ -39,13 +39,14 @@ private:
     std::string m_DatabassName; //使用数据库名
 };
 // 资源获取即初始化
-class connetionRAII{
+class connectionRAII {
 public:
-    connetionRAII(MYSQL **con,connetion_pool *connpoll);
-    ~connetionRAII();
+    connectionRAII(MYSQL** con, connection_pool* connPool);
+    ~connectionRAII();
+
 private:
-    MYSQL *conRAII;
-    connetion_pool *poolRAII;
-}
+    MYSQL* conRAII;
+    connection_pool* poolRAII;
+};
 
 #endif
