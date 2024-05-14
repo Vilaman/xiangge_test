@@ -25,14 +25,18 @@ typedef struct Userinfo{
 *功能选择函数*
 *******************/
 
+//选择功能
+void mainmenu();
 //登录选项
-void userLogin();
+void userLogin(char *input);
 //判断登录用户是否为管理员
 bool isAdmin_login();
 //管理员操作菜单
 char *adminMenu();
 //普通用户菜单
 char *normalUserMenu();
+//接收服务器返回函数
+
 
 
 

@@ -21,8 +21,6 @@
 #include "client_info.h"
 
 
-#define PORT 8088
-
 User u;//员工信息结构体变量
 
 
@@ -41,8 +39,14 @@ int main(){
 	}
 
 	puts("连接服务器成功");
+	bool isloginpass=false;//是否成功登录
+	bool isRun=true;
+	while(isRun){
+		mainmenu(bool isRun);
 
-	int 
+	}
+
+	 
 
 
 
