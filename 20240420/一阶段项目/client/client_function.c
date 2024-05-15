@@ -25,36 +25,39 @@ Info logininfo;
 
 //连接服务器后选择功能菜单 optype为当前操作类型
 void mainmenu(bool isRun, int client_fd) {
+  do {
+    puts("-----------------------------");
+    puts("---------1.登录系统----------");
+    puts("---------2.退出系统----------");
+    puts("-----------------------------");
 
-  puts("-----------------------------");
-  puts("---------1.登录系统----------");
-  puts("---------2.退出系统----------");
-  puts("-----------------------------");
+    char dataWithback[41];
+    char chose;
+    scanf(" %c", &chose);
 
-  char dataWithback[41];
-  char chose;
-  scanf(" %c", &chose);
-
-  while (getchar() != '\n');
-  // 清理输入缓冲区，移除多余的字符，包括换行符
-  switch (chose) {
-  case '1':
-	RequestInfo(CLIENT_LOGIN,client_fd);//调用发送操作函数login信息给服务器
-    if (Returnquest(LOGIN_ALLOW, client_fd)) {
-      if(strcmp(userLogin(client_fd),ADMIN_LOGIN)==0){
-			adminMenu(client_fd);//调用管理员菜单				  
-	  }else if(strcmp(userLogin(client_fd),NORMALUSER_LOGIN)==0){
-			normalUserMenu(client_fd);//调用普通用户菜单
-	  }else{  }
+    while (getchar() != '\n')
+      ;
+    // 清理输入缓冲区，移除多余的字符，包括换行符
+    switch (chose) {
+    case '1':
+      RequestInfo(CLIENT_LOGIN, client_fd); //调用发送操作函数login信息给服务器
+      if (Returnquest(LOGIN_ALLOW, client_fd)) {
+        if (strcmp(userLogin(client_fd), ADMIN_LOGIN) == 0) {
+          adminMenu(client_fd); //调用管理员菜单
+        } else if (strcmp(userLogin(client_fd), NORMALUSER_LOGIN) == 0) {
+          normalUserMenu(client_fd); //调用普通用户菜单
+        } else {
+        }
+      }
+      break;
+    case '2':
+      isRun = false;
+      break;
+    default:
+      puts("请输入正确选项");
+      break;
     }
-    break;
-  case '2':
-    isRun = false;
-    break;
-  default:
-    puts("请输入正确选项");
-    break;
-  }
+  } while (isRun);
 }
 
 
@@ -66,7 +69,7 @@ void RequestInfo(char *optype, int client_fd) {
     Backerror_Client(REQUEST_ERROR);
     return;
   } else {
-    if ((writecount = write(client_fd, optype, sizeof(optype))) < 0){
+    if ((writecount = write(client_fd, optype, M)) < 0){
       perror("Requestinfo");
 	  return;
 	  }
@@ -80,6 +83,7 @@ bool Returnquest(char *reoptype,int client_fd){
 	int readcount;
 	if((readcount=read(client_fd,comeBacktype,sizeof(comeBacktype)-1))>0){
 		comeBacktype[readcount]='\0';
+		puts(comeBacktype);
 		if(strcmp(comeBacktype,reoptype)==0){
 			return true;
 		}
@@ -138,7 +142,7 @@ char* userLogin(int client_fd) {
 //判断服务端返回信息（登录模块）
 void reDatawithServer(char *reData,int client_fd){
 	int loginReadcount;
-	if((loginReadcount=read(client_fd,reData,sizeof(reData)-1))>0){
+	if((loginReadcount=read(client_fd,reData,M-1))>0){
 		reData[loginReadcount]='\0';
 		return;
 	}
@@ -335,7 +339,7 @@ void ChangeInfo(char *usertype, int client_fd) {
 //查询用户信息
 void Queryinfo(char *usertype,int client_fd){
 	int writecount;
-	if((writecount=write(client_fd,usertype,sizeof(usertype)))<0){
+	if((writecount=write(client_fd,usertype,M))<0){
 			perror("QueryOpration");
 			return;
 	}
@@ -356,7 +360,7 @@ void Queryinfo(char *usertype,int client_fd){
 //查看操作日志
 void QueryOpration(char *usertype,int client_fd){
 	int writecount;
-	if(writecount=write(client_fd,usertype,sizeof(usertype))<0){
+	if(writecount=write(client_fd,usertype,M)<0){
 			perror("QueryOpration");
 			return;
 	}

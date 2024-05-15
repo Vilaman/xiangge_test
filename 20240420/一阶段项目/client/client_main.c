@@ -36,10 +36,8 @@ int main() {
   }
 
   puts("连接服务器成功");
-  bool isRun = true; //定义外层循环
-  while (isRun) {
-    mainmenu(isRun, client_fd); //调用外层菜单
-  }
+  bool isRun = true;          //定义外层循环
+  mainmenu(isRun, client_fd); //调用外层菜单
   close(client_fd);
   return 0;
 }
