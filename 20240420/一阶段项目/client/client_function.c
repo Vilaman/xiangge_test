@@ -62,15 +62,15 @@ void mainmenu(bool isRun, int client_fd) {
 //发送操作信息
 void RequestInfo(char *optype, int client_fd) {
   int writecount;
-  if (strcmp(optype, "") != 0) {
+  if (strcmp(optype, "") == 0) {
     Backerror_Client(REQUEST_ERROR);
     return;
   } else {
-    if ((writecount = write(client_fd, optype, client_fd)) < 0) {
+    if ((writecount = write(client_fd, optype, sizeof(optype))) < 0){
       perror("Requestinfo");
-      return;
-    }
-  }
+	  return;
+	  }
+	}
   return;
 }
 
