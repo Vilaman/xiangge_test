@@ -1,5 +1,4 @@
 #include "webserver.h"
-#include "log.h"
 
 WebServer::WebServer() {
 	//http_conn类对象
@@ -192,37 +191,47 @@ bool WebServer::dealclinetdata() {
 	struct sockaddr_in client_address;
 	socklen_t client_addrlength = sizeof(client_address);
 
+	// 根据监听模式（m_LISTENTrigmode）处理连接请求
 	if (0 == m_LISTENTrigmode) {
-		// accept()返回一个新的 socket 文件描述符用于 send() 和 recv()
+		// 在非触发模式下，只接受一次请求
+		// accept()返回一个新的socket文件描述符用于后续的send()和recv()操作
 		int connfd = accept(m_listenfd, (struct sockaddr*)&client_address, &client_addrlength);
+		// 如果accept失败，则记录错误并返回false
 		if (connfd < 0) {
 			LOG_ERROR("%s:errno is:%d", "accept error", errno);
 			return false;
 		}
-		//目前连接数满了，给客户端写一个信息：服务器内部正忙
+		// 检查当前连接数是否已达上限，如果是则向客户端显示错误信息并返回false
 		if (http_conn::m_user_count >= MAX_FD) {
 			utils.show_error(connfd, "Internal server busy");
 			LOG_ERROR("%s", "Internal server busy");
 			return false;
 		}
+		// 为新连接设置计时器（用于处理超时等情况）
 		timer(connfd, client_address);
 	}
 	else {
+		// 在触发模式下，循环接受所有等待的连接请求
 		while (1) {
 			int connfd = accept(m_listenfd, (struct sockaddr*)&client_address, &client_addrlength);
+			// 如果accept失败，则记录错误并退出循环
 			if (connfd < 0) {
 				LOG_ERROR("%s:errno is:%d", "accept error", errno);
 				break;
 			}
+			// 检查当前连接数是否已达上限，如果是则向客户端显示错误信息并退出循环
 			if (http_conn::m_user_count >= MAX_FD) {
 				utils.show_error(connfd, "Internal server busy");
 				LOG_ERROR("%s", "Internal server busy");
 				break;
 			}
+			// 为每个新连接设置计时器
 			timer(connfd, client_address);
 		}
+		// 由于在触发模式下很可能因为连接满而退出循环，这里返回false
 		return false;
 	}
+	// 如果成功处理了至少一个连接请求，则返回true
 	return true;
 }
 
@@ -244,16 +253,14 @@ bool WebServer::dealwithsignal(bool& timeout, bool& stop_server) {
 		for (int i = 0; i < ret; ++i) {
 			// 当 switch 的变量为字符时，case中可以是字符，也可以是字符对应的 ASCII 码。
 			switch (signals[i]) {
-			case SIGALRM: {
-				timeout = true;
-				break;
-			}
-
-			case SIGTERM: {  // SIGTERM（kill会触发，Ctrl+C）
-				stop_server = true;
-				break;
-			}
-
+				case SIGALRM: {
+					timeout = true;
+					break;
+				}
+				case SIGTERM: {  // SIGTERM（kill会触发，Ctrl+C）
+					stop_server = true;
+					break;
+				}
 			}
 		}
 	}
@@ -269,16 +276,12 @@ void WebServer::dealwithread(int sockfd) {
 		if (timer) {
 			adjust_timer(timer);
 		}
-
 		//若监测到读事件，将该事件放入请求队列
 		m_pool->addend(users + sockfd, 0);
 
-		while (true)
-		{
-			if (1 == users[sockfd].improv)
-			{
-				if (1 == users[sockfd].timer_flag)
-				{
+		while (true){
+			if (1 == users[sockfd].improv){
+				if (1 == users[sockfd].timer_flag){
 					deal_timer(timer, sockfd);
 					users[sockfd].timer_flag = 0;
 				}
@@ -287,17 +290,14 @@ void WebServer::dealwithread(int sockfd) {
 			}
 		}
 	}
-	else
-	{
+	else{
 		//proactor
 		if (users[sockfd].read_once()) {        // 1、主线程从这一sockfd循环读取数据, 直到没有更多数据可读
 			LOG_INFO("deal with the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
 
 			//若监测到读事件，将该事件放入请求队列
 			m_pool->addend(users + sockfd);  // 2、然后将读取到的数据封装成一个请求对象并插入请求队列
-
-			if (timer)
-			{
+			if (timer){
 				adjust_timer(timer);
 			}
 		}
@@ -307,26 +307,18 @@ void WebServer::dealwithread(int sockfd) {
 	}
 }
 
-void WebServer::dealwithwrite(int sockfd)
-{
+void WebServer::dealwithwrite(int sockfd){
 	// 创建定时器临时变量，将该连接对应的定时器取出来
 	util_timer* timer = users_timer[sockfd].timer;
 	//reactor
-	if (1 == m_actormodel)
-	{
-		if (timer)
-		{
+	if (1 == m_actormodel){
+		if (timer){
 			adjust_timer(timer);
 		}
-
 		m_pool->addend(users + sockfd, 1);
-
-		while (true)
-		{
-			if (1 == users[sockfd].improv)
-			{
-				if (1 == users[sockfd].timer_flag)
-				{
+		while (true){
+			if (1 == users[sockfd].improv){
+				if (1 == users[sockfd].timer_flag){
 					deal_timer(timer, sockfd);
 					users[sockfd].timer_flag = 0;
 				}
@@ -337,8 +329,7 @@ void WebServer::dealwithwrite(int sockfd)
 	}
 	else {
 		//proactor
-		if (users[sockfd].write())
-		{
+		if (users[sockfd].write()){
 			LOG_INFO("send data to the client(%s)", inet_ntoa(users[sockfd].get_address()->sin_addr));
 
 			if (timer) {
@@ -354,7 +345,6 @@ void WebServer::dealwithwrite(int sockfd)
 void WebServer::eventLoop() {
 	bool timeout = false;       // 超时标志
 	bool stop_server = false;   // 循环条件
-
 	while (!stop_server) {
 		// 主线程调用 epoll_wait 等待一组文件描述符上的事件，并将当前所有就绪的 epoll_event 复制到 events 数组中
 		int number = epoll_wait(m_epollfd, events, MAX_EVENT_NUMBER, -1);  // -1 代表超时等待时间是 无限
@@ -362,12 +352,10 @@ void WebServer::eventLoop() {
 			LOG_ERROR("%s", "epoll failure");
 			break;
 		}
-
 		// 然后遍历这一数组以处理这些已经就绪的事件
 		for (int i = 0; i < number; i++) {
 			// 事件表中就绪的 socket 文件描述符
 			int sockfd = events[i].data.fd;
-
 			// 当 listen 到新的用户连接，listenfd 上则产生就绪事件
 			if (sockfd == m_listenfd) {
 				bool flag = dealclinetdata();
@@ -391,14 +379,11 @@ void WebServer::eventLoop() {
 				dealwithwrite(sockfd);
 			}
 		}
-
 		// 处理定时器为非必须事件，收到信号并不是立马处理
 		// 完成读写事件后，再进行处理
 		if (timeout) {
 			utils.timer_handler();
-
 			LOG_INFO("%s", "timer tick");
-
 			timeout = false;
 		}
 	}
