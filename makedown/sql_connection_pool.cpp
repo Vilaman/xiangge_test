@@ -1,11 +1,3 @@
-#include <stdio.h>
-#include <string>
-#include <string.h>
-#include <stdlib.h>
-#include <mysql/mysql.h>
-#include <iostream>
-#include <pthread.h>
-#include <list>
 #include "sql_connection_pool.h"
 
 connection_pool::connection_pool() {
@@ -32,12 +24,12 @@ void connection_pool::init(std::string url, std::string User, std::string PassWo
 		MYSQL* con = NULL;
 		con = mysql_init(con);
 		if (con == NULL) {
-			LOG_ERROR("MYSQL Error mysql_init");
+			LOG_ERROR("MYSQL Error");
 			exit(1);
 		}
 		con = mysql_real_connect(con, url.c_str(), User.c_str(), PassWord.c_str(), DataBaseName.c_str(), Port, NULL, 0);
 		if (con == NULL) {
-			LOG_ERROR("MYSQL Error mysql_real_connect");
+			LOG_ERROR("MYSQL Error");
 			exit(1);
 		}
 		connList.push_back(con);
@@ -45,28 +37,30 @@ void connection_pool::init(std::string url, std::string User, std::string PassWo
 	}
 	reserve = sem(m_FreeConn);
 	m_MaxConn = m_FreeConn;
-	LOG_INFO("connection_pool init success");
 }
 
 MYSQL* connection_pool::GetConnection() {
 	MYSQL* con = NULL;
-	if (0 == connList.size()){
+
+	if (0 == connList.size())
 		return NULL;
-	}
+
 	reserve.wait();
+
 	lock.lock();
+
 	con = connList.front();
 	connList.pop_front();
+
 	--m_FreeConn;
 	++m_CurConn;
+
 	lock.unlock();
-	LOG_INFO("connection_pool GetConnection success");
 	return con;
 }
 
 bool connection_pool::releaseConnection(MYSQL *con) {
 	if (con == NULL) {
-		LOG_ERROR("connection_pool releaseConnection Error");
 		return false;
 	}
 	lock.lock();
@@ -77,12 +71,10 @@ bool connection_pool::releaseConnection(MYSQL *con) {
 
 	lock.unlock();
 	reserve.post();
-	LOG_INFO("connection_pool releaseConnection success");
 	return true;
 }
 
 int connection_pool::GetFreeConn() {
-	LOG_INFO("connection_pool GetFreeConn success");
 	return this->m_FreeConn;
 }
 
@@ -99,7 +91,6 @@ void connection_pool::DestroyPool() {
 		connList.clear();
 	}
 	lock.unlock();
-	LOG_INFO("connection_pool DestroyPool success");
 }
 
 connectionRAII::connectionRAII(MYSQL** con, connection_pool* connPool) {
@@ -111,21 +102,3 @@ connectionRAII::connectionRAII(MYSQL** con, connection_pool* connPool) {
 connectionRAII::~connectionRAII() {
 	poolRAII->releaseConnection(conRAII);
 }
-
-
-/* test main
-int main(){
-    std::string m_user = "root";            //登陆数据库用户名
-    std::string m_passWord = "root";        //登陆数据库密码
-    std::string m_databaseName = "yourdb";  //使用数据库名
-    int m_sql_num = 8;
-    
-    connection_pool *m_connPool = connection_pool::GetInstance();
-    m_connPool->init("localhost", m_user, m_passWord, m_databaseName, 3306, m_sql_num);
-
-	m_connPool->GetFreeConn();
-    m_connPool->GetConnection();
-
-    return 0;
-}
-*/
