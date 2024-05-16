@@ -310,7 +310,7 @@ void ChangeInfo(char *usertype, int client_fd) {
   scanf(" %d", &u.age);
   puts("请输入要修改的地址");
   scanf(" %s", u.address);
-  snprintf(input, sizeof(input) - 1, "%s %s %s %s %d %s", u.account, u.name,
+  snprintf(input, sizeof(input) - 1, "%s,%s,%s,%s,%d,%s", u.account, u.name,
            u.pass, u.sex, u.age, u.address);
   int writecount;
   if ((writecount = write(client_fd, input, sizeof(input))) < 0) {
@@ -339,7 +339,14 @@ void ChangeInfo(char *usertype, int client_fd) {
 //查询用户信息
 void Queryinfo(char *usertype,int client_fd){
 	int writecount;
-	if((writecount=write(client_fd,usertype,M))<0){
+	char username[30];
+	if(strcmp(usertype,CHANGE_INFO)==0){
+		puts("请输入你要查询的账户");
+		scanf(" %s",username);		
+	}else{
+		strcpy(username,usertype);
+	}
+	if((writecount=write(client_fd,username,M))<0){
 			perror("QueryOpration");
 			return;
 	}
@@ -360,7 +367,14 @@ void Queryinfo(char *usertype,int client_fd){
 //查看操作日志
 void QueryOpration(char *usertype,int client_fd){
 	int writecount;
-	if(writecount=write(client_fd,usertype,M)<0){
+	char username[30];
+	if(strcmp(usertype,QUERY_OPRATION)==0){
+		puts("请输入你要查询的账户");
+		scanf(" %s",username);		
+	}else{
+		strcpy(username,usertype);
+	}
+	if(writecount=write(client_fd,username,M)<0){
 			perror("QueryOpration");
 			return;
 	}

@@ -130,6 +130,7 @@ void loginMoudle(Client *c) {
   char *logaccount;
   char *logpass;
   char *content = "登录系统";
+  int count = 0;
   while (isLogMoudle) {
     if ((readcount = read(c->client_fd, acceptdata, sizeof(acceptdata))) > 0) {
       acceptdata[readcount] = '\0';
@@ -138,35 +139,50 @@ void loginMoudle(Client *c) {
     } else {
       return;
     }
-    sprintf(sql, "selete * from UserInfo where user_account='%s'",logaccount);
+    sprintf(sql, "selete * from UserInfo where user_account='%s'", logaccount);
     int writecount;
     if ((char *backdata = SqlQuery(sql, QuerySLData)) != NULL) {
-      strcpy(userinfostr, backdata); //保存返回信息
-      getInfo(u, combackdata);
-
-
-
-
-
-
-/*    if (strcmp(logaccount, "admin") == 0) {
-        if ((writecount = write(c->client_fd, ADMIN_LOGIN, M)) < 0) {
-          //发送失败客户端下线
+      memset(sql, 0, sizeof(sql));
+      sprintf(sql,
+              "selete * from UserInfo where user_account='%s' and "
+              "user_password='%s'",
+              logaccount, logpass);
+      if ((char *backdata = SqlQuery(sql, QuerySLData)) != NULL) {
+        memset(sql, 0, sizeof(sql));
+		count++;
+        sprintf(sql,
+                "update UserInfo set user_isLogin=1 where user_account='%s'",
+                logaccount);
+        Sqlop(sql);
+        AddOplog(c, USER_LOGIN, content, logaccount);
+        if (strcmp(logaccount, "admin") == 0) {
+          if ((writecount = write(c->client_fd, ADMIN_LOGIN, M)) > 0) {
+            isLogMoudle = false;
+          } else {
+            //客户端下线
+          }
         } else {
-				return;
+          if ((writecount = write(c->client_fd, NORMALUSER_LOGIN, M)) > 0) {
+            isLogMoudle = false;
+          } else {
+            //客户端下线
+          }
         }
       }else{
-        if ((writecount = write(c->client_fd, NORMALUSER_LOGIN, M)) < 0) {
-          //发送失败客户端下线
-        } else {
-				return;
-	  }*/
- 
+		  if ((writecount = write(c->client_fd,"LOGIN_PASSWORD_ERROR" , M)) > 0) {
+		
+          } else{}
+	  }
+    }else{
+		
+		  if ((writecount = write(c->client_fd,"LOGIN_USERNAME_ERROR" , M)) > 0) {
+		
+          } else {
+            //客户端下线
+          }
+	}
+  }
 }
-
-}
-}
-
 
 
 
@@ -175,20 +191,35 @@ void loginMoudle(Client *c) {
 //注册模块
 void RegisterMoudle(Client *c){
 	int readcount;
+	int writecount;
 	char data[100];
+	char sql[N];
+	char *content="注册新用户";
+	char *newaccount;
+	char *newpass;
+	char *newname;
 
 	if((readcount=read(c->client_fd,data,sizeof(data)-1))>0){
 		data[readcount]='\0';
 	}else{
 		return;
 	}
-
-
-
-
-
-
-
+	newaccount=strtok(data,",");
+	newpass=strtok(NULL,",");
+	newname=strtok(NULL,",");
+	sprintf(sql,"insert into UserInfo (user_account,user_password,user_name) values ('%s','%s','%s')");
+	if(Sqlop(sql)){
+		if((writecount=write(c->client_fd,REGISTER_SUCCESS,M))>0){
+			AddOplog(c,USER_REGISTER,content,"admin");
+		}else{
+			//客户端下线
+		}
+	}else{
+		if((writecount=write(c->client_fd,REGISTER_EXIST_ERROR,M))<0){
+			//客户端下线
+		}
+	}
+	return;
 }
 
 
@@ -226,28 +257,116 @@ void DeleteMoudle(Client *c) {
 
 
 //修改信息模块
-void ChangeMoudle(int client_fd){
+void ChangeMoudle(Client *c) {
+  User u1; //定义一个结构体接收
+  char data[250];
+  int readcount;
+  int writecount;
+  char sql[N];
+  char *content = "删除用户";
+  if((readcount=read(c->client_fd.data.sizeof(data)-1))>0){
+	  data[readcount]='\0';
+  }else{
 
+	  //错误处理
+	  return;
+  }
+  u1.account=strtok(data,",");
+  u1.name=strtok(NULL,",");
+  u1.pass=strtok(NULL,",");
+  u1.sex=strtok(NULL,",");
+  u1.age=int(*(strtok(NULL,","))-'0');
+  u1.address=strtok(NULL,",");
+  sprintf(sql,"update UserInfo set user_name='%s',user_pass='%s',user_sex='%s',user_age=%d,user_address='%s' where user_account='%s'",u1.name,u1.pass,u1.sex,u1.age,u1.address,u1.account);
+  if (Sqlop(sql)) {
+    if ((writecount = write(c->client_fd, CHANGE_SUCCESS, M)) < 0) {
+      //客户端下线或未发送成功
+    } else {
+      AddOplog(c, CHANGE_INFO, content,u1.account);
+    }
+  } else {
+    if ((writecount = write(c->client_fd, "CHANGE_NOTEXIST_ERROR", M)) < 0) {
+
+      //客户端下线或者未发送出
+      return;
+    }
+  }
 
 }
+
+
+
 
 
 //查看信息模块
-void QueryInfoMoudle(int client_fd){
+void QueryInfoMoudle(int client_fd) {
+  char data[MAXSIZE];
+  int readcount;
+  int writecount;
+  char recvdata[D];
+  char sql[N];
+  char *content = "查询信息";
+  if ((readcount = read(c->client_fd.data.sizeof(data) - 1)) > 0) {
+    recvdata[readcount] = '\0';
+  } else {
 
+    //错误处理
+    return;
+  }
+  sprintf(sql, "select * from UserInfo where user_account='%s'", recvdata);
+  strcpy(data, SqlQuery(sql, QueryAllData));
+  if (strcmp(data, "") != 0) {
+    if ((writecount = write(c->client_fd, data, sizeof(data))) < 0) {
+      //客户端下线或未发送成功
+    } else {
+      AddOplog(c, QUERYINFO, content, recvdata);
+    }
+  } else {
+    if ((writecount = write(c->client_fd, "QUERYINFO_FAIL", M)) < 0) {
 
-
-
+      //客户端下线或者未发送出
+      return;
+    }
+  }
 }
+
+
+
 
 
 
 //查看历史操作模块
-void QueryOpMoudle(int client_fd){
+void QueryOpMoudle(int client_fd) {
+  char data[250];
+  int readcount;
+  int writecount;
+  char recvdata[D];
+  char sql[N];
+  char *content = "查询操作历史";
+  if ((readcount = read(c->client_fd.data.sizeof(data) - 1)) > 0) {
+    recvdata[readcount] = '\0';
+  } else {
 
+    //错误处理
+    return;
+  }
+  sprintf(sql, "select * from Userlog where op_account='%s'", recvdata);
+  strcpy(data, SqlQuery(sql, QueryAllData));
+  if (strcmp(data, "") != 0) {
+    if ((writecount = write(c->client_fd, data, sizeof(data))) < 0) {
+      //客户端下线或未发送成功
+    } else {
+      AddOplog(c, QUERY_LOG, content, recvdata);
+    }
+  } else {
+    if ((writecount = write(c->client_fd, "QUERYOP_FAIL", M)) < 0) {
 
-
+      //客户端下线或者未发送出
+      return;
+    }
+  }
 }
+
 
 
 
@@ -308,20 +427,15 @@ char  *SqlQuery(char *sql,QueryData callback) {
 
 //sql回调函数
 int QueryAllData(void *data, int argc, char **argv, char **azColName) {
-  if(argc>0){
-  static int printed = 0; // 标志变量，用于判断是否已经打印了列名
-  if (!printed) {
+  char *ret = (char *)data;
+  if (argc > 0) {
+    // 打印数据
     for (int i = 0; i < argc; i++) {
-      printf("%s ", azColName[i]); // 打印列名
+      strcat(ret, argv[i] ? argv[i] : "NULL");
+      strcat(ret, " "); // 添加分隔符
+      printf("%s ", argv[i] ? argv[i] : "NULL");
     }
-    printf("\n");
-    printed = 1; // 设置标志变量为已打印
-  }
-  // 打印数据
-  for (int i = 0; i < argc; i++) {
-    printf("%s ", argv[i] ? argv[i] : "NULL");
-  }
-  printf("\n"); // 添加换行符;
+    strcat(ret, "\n"); // 添加换行符;
   }
   return 0;
 }
