@@ -5,7 +5,7 @@ RF=-rf
 EXE=simple
 $(EXE):debug clean
 debug:
-	@$(CC) -o $(LX) pthread_pool.c $(LX).c -lpthread -lsqlite3
+	@$(CC) -o $(LX) $(LX).c -lpthread -lsqlite3
 	@./$(LX)
 clean:
 	@$(RM) $(RF) $(LX)

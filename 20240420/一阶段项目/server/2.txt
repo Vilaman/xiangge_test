@@ -1,0 +1,23 @@
+sprintf(
+        sql,
+        "selete * from UserInfo where user_account='%s' and user_password='%s'",
+        logaccount, logpass);
+    int writecount;
+    if ((char *backdata = SqlQuery(sql, QuerySLData)) != NULL) {
+      strcpy(userinfostr, backdata); //保存登录信息
+      getInfo(u, combackdata);
+      AddOplog(c, USER_LOGIN, content, logaccount);
+      if (strcmp(logaccount, "admin") == 0) {
+        if ((writecount = write(c->client_fd, ADMIN_LOGIN, M)) < 0) {
+          //发送失败客户端下线
+        } else {
+				return;
+        }
+      }else{
+        if ((writecount = write(c->client_fd, NORMALUSER_LOGIN, M)) < 0) {
+          //发送失败客户端下线
+        } else {
+				return;
+	  }
+    }
+  }else if()

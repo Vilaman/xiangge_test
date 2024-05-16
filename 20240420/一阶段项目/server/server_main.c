@@ -23,6 +23,7 @@
 #include <time.h>
 #include "server_error.h"
 #include "server_function"
+#include "pthread_pool.h"
 
 
 
@@ -55,12 +56,33 @@ int main(){
 	int client_fd;
 	socklen_t len=sizeof(client);
 	puts("等待连接");
+	while((client_fd =accept(server_fd,(struct sockaddr*)&client,&len))>0){
+		//已连接
+		//处理客户端连接
+		//保证每个客户端连接保存套接字的是一个新的变量和空间，彼此线程互不影响
+	    Client *c = malloc(sizeof(Client));
+		c->fd = client_fd;
+		c->info =client;
 
-
-
-
-
-
-
+		pool_add_task(&p,handleClient,c);
+		//输出客户端已连接
+		
+		char *ip = inet_ntoa(client.sin_addr);
+		int port = ntohs(client.sin_port);
+		printf("已接受客户端:%s:%d的连接\n",ip,port);
+		//等待下一位客户端连接
+		puts("等待下一位客户端的连接");
+	}
+	//5. 关闭
+	close(server_fd);
     return 0;
+}
+
+//传递的就是指向客户端套接字的指针
+void* handleClient(void* args){
+	//分离
+	pthread_t pid  = pthread_self();
+	pthread_detach(pid);//设置为分离线程
+	Client *c = (Client*)args;
+
 }
