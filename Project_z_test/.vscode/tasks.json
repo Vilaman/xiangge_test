@@ -14,6 +14,7 @@
                 "-lstdc++",
                 "-lpthread",
                 "-lmysqlclient",
+                "-lgtest",
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}" 
             ],
