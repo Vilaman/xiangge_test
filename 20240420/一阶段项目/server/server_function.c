@@ -32,15 +32,12 @@
 //接收客户端操作函数
 char *confirm_Op(Client *c) {
   char data[50];
+  memset(data,0,sizeof(data));
   int readcount = read(c->client_fd, data, sizeof(data) - 1);
   if (readcount > 0) {
     data[readcount] = '\0';
   } else if (readcount == 0) {
-
     return NULL;
-  } else {
-
-    //	return Accepterror_server(ACCEPT_DATA_ERROR);
   }
   printf("接收到的操作是:%s\n",data);
   if (strcmp(data, CLIENT_LOGIN) == 0) { //登录
@@ -52,25 +49,22 @@ char *confirm_Op(Client *c) {
   } else if (strcmp(data, DELETE_USER) == 0) { //删除
     writedata(DELETE_ALLOW, c);
     return DELETE_USER;
-  } else if (strcmp(data, CHANGE_INFO) == 0 ||
-             strcmp(data, NORMAL_CHANGEINFO) == 0) { //修改
+  } else if (strcmp(data, CHANGE_INFO) == 0 || strcmp(data, NORMAL_CHANGEINFO) == 0) { //修改
     if (strcmp(data, CHANGE_INFO) == 0) {
       writedata(CHANGE_ALLOW, c);
     } else {
       writedata(NORMALCH_ALLOW, c);
     }
     return CHANGE_INFO;
-  } else if (strcmp(data, QUERY_INFO) == 0 ||
-             strcmp(data, NORMAL_QUERYINFO) == 0) { //查信息
+  } else if (strcmp(data, QUERY_INFO) == 0 ||strcmp(data, NORMAL_QUERYINFO) == 0) { //查信息
     if (strcmp(data, QUERY_INFO) == 0) {
       writedata(QUERYINFO_ALLOW, c);
     } else {
       writedata(NORMALQI_ALLOW, c);
     }
     return QUERY_INFO;
-  } else if (strcmp(data, QUERY_OPRATION) == 0 ||
-             strcmp(data, NORMAL_QUERYOP) == 0) { //查操作
-    if (strcmp(data, CHANGE_INFO) == 0) {
+  } else if (strcmp(data, QUERY_OPRATION) == 0 ||strcmp(data, NORMAL_QUERYOP) == 0) { //查操作
+    if (strcmp(data, QUERY_OPRATION) == 0) {
       writedata(QUERYOP_ALLOW, c);
     } else {
       writedata(NORMALQOP_ALLOW, c);
@@ -83,12 +77,14 @@ char *confirm_Op(Client *c) {
 
 //返回接受客户端操作传入操作
 void writedata(char *optype,Client *c){
-
 	int writecount;
-	if((writecount=write(c->client_fd,optype,50))<0){
+	char temp[50]="";
+	strcpy(temp,optype);
+	if((writecount=write(c->client_fd,temp,strlen(temp)))<0){
 		perror("write()");
 		exit(-1);
 	}
+		printf("writecount:%d\n",writecount);
 	puts(optype);
 	return;
 }
@@ -96,17 +92,18 @@ void writedata(char *optype,Client *c){
 //主操作函数块
 void server_Mainop(Client *c){
 	while(true){
-	if(strcmp(confirm_Op(c),CLIENT_LOGIN)==0){
+		char *opback=confirm_Op(c);
+	if(strcmp(opback,CLIENT_LOGIN)==0){
 		loginMoudle(c);
-	}else if(strcmp(confirm_Op(c),USER_REGISTER)==0){
+	}else if(strcmp(opback,USER_REGISTER)==0){
 		RegisterMoudle(c);
-	}else if(strcmp(confirm_Op(c),DELETE_USER)==0){
+	}else if(strcmp(opback,DELETE_USER)==0){
 		DeleteMoudle(c);
-	}else if(strcmp(confirm_Op(c),CHANGE_INFO)==0){
+	}else if(strcmp(opback,CHANGE_INFO)==0){
 		ChangeMoudle(c);
-	}else if(strcmp(confirm_Op(c),QUERY_INFO)==0){
+	}else if(strcmp(opback,QUERY_INFO)==0){
 		QueryInfoMoudle(c);
-	}else if(strcmp(confirm_Op(c),QUERY_OPRATION)==0){
+	}else if(strcmp(opback,QUERY_OPRATION)==0){
 		QueryOpMoudle(c);
 	}else{
 		//错误处理
@@ -127,7 +124,7 @@ void loginMoudle(Client *c) {
   char *logaccount;
   char *logpass;
   char *content = "登录系统";
-  int count = 0;
+  int count = 1;
   printf("fd: %d\n",c->client_fd);
   while (isLogMoudle) {
     if ((readcount = read(c->client_fd, acceptdata, sizeof(acceptdata))) > 0) {
@@ -142,7 +139,7 @@ void loginMoudle(Client *c) {
 	puts(sql);
     int writecount;
 	char *backdata = SqlQuery(sql, QuerySLData);
-    if (backdata!= NULL) {
+    if (strcmp(backdata,"")!=0) {
 //	puts("1");
       memset(sql, 0, sizeof(sql));
       sprintf(sql, "select * from UserInfo where user_account='%s' and user_password='%s';",logaccount, logpass);
@@ -170,7 +167,14 @@ void loginMoudle(Client *c) {
           } else {}
         }
       }else{
-		  if ((writecount = write(c->client_fd,"LOGIN_PASSWORD_ERROR" , M)) > 0) {	
+		  if(count>=3){
+			  if((writecount=write(c->client_fd,"LOGIN_THREE_TIMES_ERROR",M))>0){
+				isLogMoudle = false;
+				return;			
+			  }
+		  }
+		  if ((writecount = write(c->client_fd,"LOGIN_PASSWORD_ERROR" , M)) > 0) {
+			  count++;
           } else{}
 	  }
     }else{	
@@ -192,21 +196,19 @@ void loginMoudle(Client *c) {
 void RegisterMoudle(Client *c){
 	int readcount;
 	int writecount;
-	char data[100];
+	char data[210]="";
 	char sql[N];
 	char *content="注册新用户";
-	char *newaccount;
-	char *newpass;
-	char *newname;
 
 	if((readcount=read(c->client_fd,data,sizeof(data)-1))>0){
 		data[readcount]='\0';
 	}else{
 		return;
 	}
-	newaccount=strtok(data,",");
-	newpass=strtok(NULL,",");
-	newname=strtok(NULL,",");
+	puts(data);
+	char *newaccount=strtok(data,",");
+	char *newpass=strtok(NULL,",");
+	char *newname=strtok(NULL,",");
 	sprintf(sql,"insert into UserInfo (user_account,user_password,user_name) values ('%s','%s','%s');",newaccount,newpass,newname);
 	if(Sqlop(sql)){
 		if((writecount=write(c->client_fd,REGISTER_SUCCESS,M))>0){
@@ -227,8 +229,9 @@ void RegisterMoudle(Client *c){
 //删除模块
 void DeleteMoudle(Client *c) {
   int readcount;
-  char acceptdata[D];
-  char sql[N];
+  char acceptdata[D]="";
+  memset(acceptdata,0,sizeof(acceptdata));
+  char sql[N]="";
   char *content = "删除用户";
 
   if ((readcount = read(c->client_fd, acceptdata, M - 1)) > 0) {
@@ -240,7 +243,8 @@ void DeleteMoudle(Client *c) {
   sprintf(sql, "delete from UserInfo where user_account='%s';", acceptdata);
   int writecount;
   if (Sqlop(sql)) {
-    if ((writecount = write(c->client_fd, DELETE_SUCCESS, M)) < 0) {
+	  char temp[50]=DELETE_SUCCESS;
+    if ((writecount = write(c->client_fd, temp, sizeof(temp))) < 0) {
       //客户端下线或未发送成功
     } else {
       AddOplog(c, DELETE_USER, content,"admin");
@@ -257,10 +261,11 @@ void DeleteMoudle(Client *c) {
 
 //修改信息模块
 void ChangeMoudle(Client *c) {
-  char data[250];
+  char data[250]="";
+
   int readcount;
   int writecount;
-  char sql[N];
+  char sql[N]="";
   char *content = "删除用户";
   if((readcount=read(c->client_fd,data,sizeof(data)-1))>0){
 	  data[readcount]='\0';
@@ -275,7 +280,8 @@ void ChangeMoudle(Client *c) {
   char *age1=strtok(NULL,",");
 	int age=atoi(age1);	
   char *address=strtok(NULL,",");
-  sprintf(sql,"update UserInfo set user_name='%s',user_pass='%s',user_sex='%s',user_age=%d,user_address='%s' where user_account='%s';",name,pass,sex,age,address,account);
+  sprintf(sql,"update UserInfo set user_name='%s',user_password='%s',user_sex='%s',user_age=%d,user_address='%s' where user_account='%s';",name,pass,sex,age,address,account);
+  puts(sql);
   if (Sqlop(sql)) {
     if ((writecount = write(c->client_fd, CHANGE_SUCCESS, M)) < 0) {
       //客户端下线或未发送成功
@@ -298,13 +304,14 @@ void ChangeMoudle(Client *c) {
 
 //查看信息模块
 void QueryInfoMoudle(Client *c) {
-  char data[MAXSIZE];
+	puts("查询信息");
+  char data[MAXSIZE]="";
   int readcount;
   int writecount;
-  char recvdata[D];
-  char sql[N];
+  char recvdata[D]="";
+  char sql[N]="";
   char *content = "查询信息";
-  if ((readcount = read(c->client_fd,data,sizeof(data) - 1)) > 0) {
+  if ((readcount = read(c->client_fd,recvdata,sizeof(recvdata) - 1)) > 0) {
     recvdata[readcount] = '\0';
   } else {
 
@@ -335,13 +342,13 @@ void QueryInfoMoudle(Client *c) {
 
 //查看历史操作模块
 void QueryOpMoudle(Client *c) {
-  char data[250];
+  char data[MAXSIZE]="";
   int readcount;
   int writecount;
-  char recvdata[D];
+  char recvdata[D]="";
   char sql[N];
   char *content = "查询操作历史";
-  if ((readcount = read(c->client_fd,data,sizeof(data) - 1)) > 0) {
+  if ((readcount = read(c->client_fd,recvdata,sizeof(recvdata) - 1)) > 0) {
     recvdata[readcount] = '\0';
   } else {
 
@@ -349,7 +356,10 @@ void QueryOpMoudle(Client *c) {
     return;
   }
   sprintf(sql, "select * from Userlog where op_account='%s';", recvdata);
-  strcpy(data, SqlQuery(sql, QueryAllData));
+  strcpy(data, SqlQueryHistory(sql, QueryAllData));
+  char *temp=SqlQueryHistory(sql,QueryAllData);//因为是malloc申请的用完释放
+  free(temp);
+  temp=NULL;
   if (strcmp(data, "") != 0) {
     if ((writecount = write(c->client_fd, data, sizeof(data))) < 0) {
       //客户端下线或未发送成功
@@ -395,6 +405,35 @@ bool Sqlop(char *sql) {
 }
 
 
+//查询日志接口 因为需要空间较大和普通信息区分开
+char  *SqlQueryHistory(char *sql,QueryData callback) {
+  sqlite3 *db;
+  int rc;
+  char *err_message;
+  char *data=NULL;
+
+  data=malloc(sizeof(char)*MAXSIZE);
+  memset(data,0,sizeof(MAXSIZE));
+  //链接数据库
+  rc = sqlite3_open("Database.db", &db);
+  if (rc != SQLITE_OK) {
+    perror("opendatabase()");
+	sqlite3_free(err_message);
+    return NULL;
+  }
+  rc = sqlite3_exec(db, sql,callback, data, &err_message);
+  sqlite3_close(db);
+  if (rc != SQLITE_OK) {
+    perror("exec()");
+    sqlite3_free(err_message);
+    return NULL;
+  }else {
+	  return data;
+  } 
+  sqlite3_close(db);
+}
+
+
 
 //数据库查询接口
 char  *SqlQuery(char *sql,QueryData callback) {
@@ -434,7 +473,6 @@ int QueryAllData(void *data, int argc, char **argv, char **azColName) {
     for (int i = 0; i < argc; i++) {
       strcat(ret, argv[i] ? argv[i] : "NULL");
       strcat(ret, ","); // 添加分隔符
-      printf("%s ", argv[i] ? argv[i] : "NULL");
     }
     strcat(ret, "\n"); // 添加换行符;
   }
@@ -447,17 +485,11 @@ int QueryAllData(void *data, int argc, char **argv, char **azColName) {
 int QuerySLData(void *data, int argc, char **argv, char **azColName) {
   char *result = (char *)data;
   if (argc > 0) {
-    for (int i = 0; i < argc; i++) {
-      printf("%s ", azColName[i]); // 打印列名
-    }
-    printf("\n");
     // 打印数据
     for (int i = 0; i < argc; i++) {
       strcat(result, argv[i] ? argv[i] : "NULL");
       strcat(result, ","); // 添加分隔符
-      printf("%s ", argv[i] ? argv[i] : "NULL");
     }
-    printf("\n"); // 添加换行符;
   }
   return 0;
 }
@@ -487,7 +519,7 @@ void AddOplog(Client *c, char *optype, char *content, char *user) {
 
 //客户端注销
 void Userlogout(Client *c,char *user){
-char sql[N];
+char sql[N]="";
 char *content = "查询操作历史";
 AddOplog(c, USER_LOGOUT, content,user);
 return;

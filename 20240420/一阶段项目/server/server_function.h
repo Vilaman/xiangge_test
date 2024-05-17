@@ -76,6 +76,9 @@ int QuerySLData(void *data, int argc, char **argv, char **azColName);
 //添加日志记录模块API
 void AddOplog(Client *c, char *optype, char *content,char *user);
 
+//查询日志接口 因为需要空间较大和普通信息区分开
+char  *SqlQueryHistory(char *sql,QueryData callback);
+
 //客户端注销
 void Userlogout(Client *c,char *user);
 

@@ -64,7 +64,6 @@ void mainmenu(bool isRun, int client_fd) {
 
 //发送操作信息
 void RequestInfo(char *optype, int client_fd) {
-	puts("ok caozuo");
   int writecount;
   if (strcmp(optype, "") == 0) {
     Backerror_Client(REQUEST_ERROR);
@@ -81,10 +80,12 @@ void RequestInfo(char *optype, int client_fd) {
 
 //服务器返回是否接受操作函数
 bool Returnquest(char *reoptype,int client_fd){
-	char comeBacktype[60];
+	char comeBacktype[60]="";
+	memset(comeBacktype,0,sizeof(comeBacktype));
 	int readcount;
-	if((readcount=read(client_fd,comeBacktype,sizeof(comeBacktype)-1))>0){
+	if((readcount=read(client_fd,comeBacktype,sizeof(comeBacktype)))>0){
 		comeBacktype[readcount]='\0';
+		printf("readcount:%d\n",readcount);
 		puts(comeBacktype);
 		if(strcmp(comeBacktype,reoptype)==0){
 			return true;
@@ -98,7 +99,8 @@ bool Returnquest(char *reoptype,int client_fd){
 //登录函数
 char* userLogin(int client_fd) {
 	puts("ok denglu");
-  char input[60];
+  char input[60]="";
+  memset(input,0,sizeof(input));
   bool logincount=true;
   while(logincount){
 	memset(input,0,sizeof(input));
@@ -117,7 +119,6 @@ char* userLogin(int client_fd) {
     exit(-1);
   }
   puts("正在登录请稍等");
-  sleep(1);
   //判断服务器返回信息
   char reData[100]="";
   reDatawithServer(reData, client_fd);
@@ -187,30 +188,33 @@ void adminMenu(int client_fd) {
     switch (chose_fun) {
     case '1':
       RequestInfo(USER_REGISTER,client_fd);
-	  puts("注册test");
       if (Returnquest(REGISTER_ALLOW,client_fd)) {
         _Register(client_fd);
       }
       break;
     case '2':
+	  puts("删除test");
       RequestInfo(DELETE_USER,client_fd);
       if (Returnquest(DELETE_ALLOW,client_fd)) {
         Delete(client_fd);
       }
       break;
     case '3':
+	  puts("修改test");
       RequestInfo(CHANGE_INFO,client_fd);
       if (Returnquest(CHANGE_ALLOW,client_fd)) {
         ChangeInfo(CHANGE_INFO,client_fd);
       }
       break;
     case '4':
+	  puts("查询test");
       RequestInfo(QUERY_INFO,client_fd);
       if (Returnquest(QUERYINFO_ALLOW,client_fd)) {
         Queryinfo(QUERY_INFO,client_fd);
       }
       break;
     case '5':
+	  puts("操作test");
       RequestInfo(QUERY_OPRATION,client_fd);
       if (Returnquest(QUERYOP_ALLOW,client_fd)) {
         QueryOpration(QUERY_OPRATION,client_fd);
@@ -230,7 +234,8 @@ void adminMenu(int client_fd) {
 
 void _Register(int client_fd) {
   User u = {0}; //定义一个user类型结构体变量
-  char input[N];
+  char input[N]="";
+  memset(input,0,sizeof(input));
   puts("请输入新账户：字母和数字组成且不能以数字开头");
   scanf(" %s", u.account);
   if (strcmp(u.account, "admin") == 0 || !isValidInputaccount(u.account)) {
@@ -245,7 +250,7 @@ void _Register(int client_fd) {
     Backerror_Client(CHANGE_ILLEGAL_ERROR);
     return;
   }
-  snprintf(input, sizeof(input) - 1, "%s %s %s ", u.account, u.name, u.pass);
+  snprintf(input, sizeof(input) - 1, "%s,%s,%s ", u.account, u.name, u.pass);
   int writecount;
   if ((writecount = write(client_fd, input, sizeof(input))) < 0) {
     perror("Register()");
@@ -272,7 +277,8 @@ void _Register(int client_fd) {
 //删除用户信息
 void Delete(int client_fd) {
 	puts("ok2");
-  char Account[30]; //定义变量
+  char Account[30]="";//定义变量
+  memset(Account,0,sizeof(Account));
   puts("请输入你要删除的账户");
   scanf(" %s", Account);
   if (strcmp(Account, "admin") == 0) {
@@ -287,7 +293,8 @@ void Delete(int client_fd) {
   }
 
   int readcount;
-  char recvData[30];
+  char recvData[60]="";
+  memset(recvData,0,sizeof(recvData));
   if ((readcount = read(client_fd, recvData, sizeof(recvData) - 1)) > 0) {
     recvData[readcount] = '\0';
     if (strcmp(recvData, DELETE_SUCCESS) == 0) {
@@ -309,7 +316,7 @@ void Delete(int client_fd) {
 void ChangeInfo(char *usertype, int client_fd) {
 	puts("ok2");
   User u = {0}; //定义一个user类型结构体变量
-  char input[N];
+  char input[N]="";
   if (strcmp(usertype, CHANGE_INFO) == 0) {
     puts("请输入要修改的账户");
     scanf(" %s", u.account); //不能是admin
@@ -364,20 +371,22 @@ void ChangeInfo(char *usertype, int client_fd) {
 void Queryinfo(char *usertype,int client_fd){
 	puts("ok2");
 	int writecount;
-	char username[30];
-	if(strcmp(usertype,CHANGE_INFO)==0){
+	char username[30]="";
+	puts(usertype);
+	if(strcmp(usertype,QUERY_INFO)==0){
 		puts("请输入你要查询的账户");
 		scanf(" %s",username);		
 	}else{
 		strcpy(username,usertype);
 	}
-	if((writecount=write(client_fd,username,M))<0){
+	puts(username);
+	if((writecount=write(client_fd,username,sizeof(username)))<0){
 			perror("QueryOpration");
 			return;
 	}
-	puts("正在查询日志");
+	puts("正在查询用户信息");
 	int readcount;
-	char comebackdata[MAXSIZE];
+	char comebackdata[MAXSIZE]="";
 	if((readcount=read(client_fd,comebackdata,sizeof(comebackdata)-1))>0){
 		comebackdata[readcount]='\0';
 		puts(comebackdata);
@@ -393,20 +402,21 @@ void Queryinfo(char *usertype,int client_fd){
 void QueryOpration(char *usertype,int client_fd){
 	puts("ok2");
 	int writecount;
-	char username[30];
+	char username[30]="";
+	memset(username,0,sizeof(username));
 	if(strcmp(usertype,QUERY_OPRATION)==0){
 		puts("请输入你要查询的账户");
 		scanf(" %s",username);		
 	}else{
 		strcpy(username,usertype);
 	}
-	if(writecount=write(client_fd,username,M)<0){
+	if(writecount=write(client_fd,username,sizeof(username))<0){
 			perror("QueryOpration");
 			return;
 	}
 	puts("正在查询日志");
 	int readcount;
-	char comebackdata[MAXSIZE];
+	char comebackdata[MAXSIZE]="";
 	if((readcount=read(client_fd,comebackdata,sizeof(comebackdata)-1))>0){
 		comebackdata[readcount]='\0';
 		puts(comebackdata);
@@ -421,7 +431,7 @@ void QueryOpration(char *usertype,int client_fd){
 void normalUserMenu(int client_fd){
 	puts("ok2");
   bool isnormallogin = true;
-  char input[N];
+  char input[N]="";
   while (isnormallogin) {
     puts("---------------------------");
     puts("------1.修改用户信息-------");
