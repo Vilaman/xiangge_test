@@ -16,6 +16,7 @@
 #include<arpa/inet.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
+#include <ctype.h>
 #include "client_function.h"
 #include "client_info.h"
 #include "client_error.h"
@@ -34,17 +35,16 @@ void mainmenu(bool isRun, int client_fd) {
     char dataWithback[41];
     char chose;
     scanf(" %c", &chose);
-
-    while (getchar() != '\n')
-      ;
+//    while (getchar() != '\n');
     // 清理输入缓冲区，移除多余的字符，包括换行符
     switch (chose) {
     case '1':
       RequestInfo(CLIENT_LOGIN, client_fd); //调用发送操作函数login信息给服务器
       if (Returnquest(LOGIN_ALLOW, client_fd)) {
-        if (strcmp(userLogin(client_fd), ADMIN_LOGIN) == 0) {
+	char *backstatus=userLogin(client_fd);
+        if (strcmp(backstatus, ADMIN_LOGIN) == 0) {
           adminMenu(client_fd); //调用管理员菜单
-        } else if (strcmp(userLogin(client_fd), NORMALUSER_LOGIN) == 0) {
+        } else if (strcmp(backstatus, NORMALUSER_LOGIN) == 0) {
           normalUserMenu(client_fd); //调用普通用户菜单
         } else {
         }
@@ -64,12 +64,14 @@ void mainmenu(bool isRun, int client_fd) {
 
 //发送操作信息
 void RequestInfo(char *optype, int client_fd) {
+	puts("ok caozuo");
   int writecount;
   if (strcmp(optype, "") == 0) {
     Backerror_Client(REQUEST_ERROR);
     return;
   } else {
-    if ((writecount = write(client_fd, optype, M)) < 0){
+	  puts(optype);
+    if ((writecount = write(client_fd, optype, 30)) < 0){
       perror("Requestinfo");
 	  return;
 	  }
@@ -79,7 +81,7 @@ void RequestInfo(char *optype, int client_fd) {
 
 //服务器返回是否接受操作函数
 bool Returnquest(char *reoptype,int client_fd){
-	char comeBacktype[40];
+	char comeBacktype[60];
 	int readcount;
 	if((readcount=read(client_fd,comeBacktype,sizeof(comeBacktype)-1))>0){
 		comeBacktype[readcount]='\0';
@@ -95,16 +97,16 @@ bool Returnquest(char *reoptype,int client_fd){
 
 //登录函数
 char* userLogin(int client_fd) {
+	puts("ok denglu");
   char input[60];
-  int logincount=0;
-  while(logincount<=3){
-	logincount++;
+  bool logincount=true;
+  while(logincount){
 	memset(input,0,sizeof(input));
     printf("请输入你的用户名\n");
     scanf(" %19s", logininfo.username);
     printf("请输入你的密码\n");
     scanf(" %10s", logininfo.password);
-  snprintf(input, sizeof(input) - 1, "%s %s", logininfo.username, logininfo.password);
+  snprintf(input, sizeof(input) - 1, "%s,%s", logininfo.username, logininfo.password);
   if (strcmp(input, "") == 0) {           //如果输入的为空
     Backerror_Client(LOGIN_FORMAT_ERROR); //调用格式错误函数
     continue;
@@ -117,18 +119,22 @@ char* userLogin(int client_fd) {
   puts("正在登录请稍等");
   sleep(1);
   //判断服务器返回信息
-  char reData[40];
+  char reData[100]="";
   reDatawithServer(reData, client_fd);
+  printf("返回值:%s\n",reData);
   if (strcmp(reData, "LOGIN_USERNAME_ERROR") == 0) {
 	  Backerror_Client(LOGIN_USERNAME_ERROR);
   }else if(strcmp(reData,"LOGIN_PASSWORD_ERROR")==0){
 		Backerror_Client(LOGIN_PASSWORD_ERROR);
   }else if(strcmp(reData,"LOGIN_THREE_TIMES_ERROR")==0){
 		Backerror_Client(LOGIN_THREE_TIMES_ERROR);
+		logincount=false;
 		return "LOGIN_THREE_TIMES_ERROR";
   }else if(strcmp(reData,ADMIN_LOGIN)==0){
+		logincount=false;
 		return ADMIN_LOGIN;
   }else if(strcmp(reData,NORMALUSER_LOGIN)==0){
+		logincount=false;
 		return NORMALUSER_LOGIN;
   }
   else{
@@ -141,9 +147,11 @@ char* userLogin(int client_fd) {
 
 //判断服务端返回信息（登录模块）
 void reDatawithServer(char *reData,int client_fd){
+	puts("ok2");
 	int loginReadcount;
-	if((loginReadcount=read(client_fd,reData,M-1))>0){
+	if((loginReadcount=read(client_fd,reData,200))>0){
 		reData[loginReadcount]='\0';
+		puts(reData);
 		return;
 	}
 	Backerror_Client(SERVER_COMBACK_ERROR);
@@ -176,10 +184,10 @@ void adminMenu(int client_fd) {
     puts("---------------------------");
     char chose_fun;
     scanf(" %c", &chose_fun);
-    while (getchar() != '\n');
     switch (chose_fun) {
     case '1':
       RequestInfo(USER_REGISTER,client_fd);
+	  puts("注册test");
       if (Returnquest(REGISTER_ALLOW,client_fd)) {
         _Register(client_fd);
       }
@@ -223,23 +231,28 @@ void adminMenu(int client_fd) {
 void _Register(int client_fd) {
   User u = {0}; //定义一个user类型结构体变量
   char input[N];
-  puts("请输入新账户");
-  scanf(" %s", u.account); //不能是admin
-
+  puts("请输入新账户：字母和数字组成且不能以数字开头");
+  scanf(" %s", u.account);
+  if (strcmp(u.account, "admin") == 0 || !isValidInputaccount(u.account)) {
+    Backerror_Client(CHANGE_ILLEGAL_ERROR);
+  }
   puts("请输入名字");
   scanf(" %s", u.name);
   //密码需满足条件
-  puts("请输入密码");
+  puts("请输入密码:必须是字母、数字和下划线组成，位数必须是6-10位");
   scanf(" %s", u.pass);
-
+  if (!isValidInput(u.pass)) {
+    Backerror_Client(CHANGE_ILLEGAL_ERROR);
+    return;
+  }
   snprintf(input, sizeof(input) - 1, "%s %s %s ", u.account, u.name, u.pass);
   int writecount;
-  if((writecount=write(client_fd,input,sizeof(input)))<0){
-		perror("Register()");
-		return;
+  if ((writecount = write(client_fd, input, sizeof(input))) < 0) {
+    perror("Register()");
+    return;
   }
-	int readcount;
-	char recvData[30];
+  int readcount;
+  char recvData[30];
   if ((readcount = read(client_fd, recvData, sizeof(recvData) - 1)) > 0) {
     recvData[readcount] = '\0';
     if (strcmp(recvData, REGISTER_SUCCESS) == 0) {
@@ -258,9 +271,14 @@ void _Register(int client_fd) {
 
 //删除用户信息
 void Delete(int client_fd) {
+	puts("ok2");
   char Account[30]; //定义变量
   puts("请输入你要删除的账户");
   scanf(" %s", Account);
+  if (strcmp(Account, "admin") == 0) {
+    Backerror_Client(CHANGE_ILLEGAL_ERROR);
+    return;
+  }
   //判断是否是admin
   int writecount;
   if ((writecount = write(client_fd, Account, sizeof(Account))) < 0) {
@@ -289,21 +307,27 @@ void Delete(int client_fd) {
 
 //修改用户信息
 void ChangeInfo(char *usertype, int client_fd) {
+	puts("ok2");
   User u = {0}; //定义一个user类型结构体变量
   char input[N];
   if (strcmp(usertype, CHANGE_INFO) == 0) {
     puts("请输入要修改的账户");
     scanf(" %s", u.account); //不能是admin
-
+    if (strcmp(u.account, "admin") == 0) {
+      Backerror_Client(CHANGE_ILLEGAL_ERROR);
+      return;
+    }
   } else {
     strcpy(u.account, logininfo.username);
   }
   puts("请输入要修改的名字");
   scanf(" %s", u.name);
-  //密码需满足条件
-  puts("请输入要修改的密码");
+  puts("请输入密码:必须是字母、数字和下划线组成，位数必须是6-10位");
   scanf(" %s", u.pass);
-
+  if (!isValidInput(u.pass)) {
+    Backerror_Client(CHANGE_ILLEGAL_ERROR);
+    return;
+  }
   puts("请输入要修改的性别");
   scanf(" %s", u.sex);
   puts("请输入要修改的年龄");
@@ -338,6 +362,7 @@ void ChangeInfo(char *usertype, int client_fd) {
 
 //查询用户信息
 void Queryinfo(char *usertype,int client_fd){
+	puts("ok2");
 	int writecount;
 	char username[30];
 	if(strcmp(usertype,CHANGE_INFO)==0){
@@ -366,6 +391,7 @@ void Queryinfo(char *usertype,int client_fd){
 
 //查看操作日志
 void QueryOpration(char *usertype,int client_fd){
+	puts("ok2");
 	int writecount;
 	char username[30];
 	if(strcmp(usertype,QUERY_OPRATION)==0){
@@ -393,6 +419,7 @@ void QueryOpration(char *usertype,int client_fd){
 
 //普通用户操作菜单函数
 void normalUserMenu(int client_fd){
+	puts("ok2");
   bool isnormallogin = true;
   char input[N];
   while (isnormallogin) {
@@ -438,10 +465,43 @@ void normalUserMenu(int client_fd){
 
 }
 
+//判断密码是否符合
+bool isValidInput(const char *str) {
+    int len = strlen(str);
 
+    // 检查位数是否在 6 到 10 之间
+    if (len < 6 || len > 10) {
+        return false;
+    }
 
+    // 逐个检查字符串中的字符
+    for (int i = 0; str[i] != '\0'; ++i) {
+        // 如果字符不是字母、数字或下划线，返回错误
+        if (!isalnum(str[i]) && str[i] != '_') {
+            return false;
+        }
+    }
 
+    return true; // 字符串符合要求，返回正确
+}
 
+//判断账号是否符合要求
+bool isValidInputaccount(const char *str) {
+    // 检查第一个字符是否是数字
+    if (isdigit(str[0])) {
+        return false; // 如果以数字开头，返回错误
+    }
+
+    // 逐个检查字符串中的字符
+    for (int i = 0; str[i] != '\0'; ++i) {
+        // 如果字符不是字母或数字，返回错误
+        if (!isalnum(str[i])) {
+            return false;
+        }
+    }
+
+    return true; // 字符串符合要求，返回正确
+}
 
 
 

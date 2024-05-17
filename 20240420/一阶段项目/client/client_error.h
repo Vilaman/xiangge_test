@@ -28,7 +28,9 @@ enum client_error{
 	REQUEST_ERROR,//客户端请求操作错误
 	SELECT_OPERATION_ERROR,//选择操作错误
 	QUERYINFO_FAIL,//查询信息失败
-	QUERYOP_FAIL//查询日志失败
+	QUERYOP_FAIL,//查询日志失败
+	CHANGE_ILLEGAL_ERROR, //非法修改ADMIN
+	DELETE_ILLEGAL_ERROR  //非法删除ADMIN
 	
 };
 

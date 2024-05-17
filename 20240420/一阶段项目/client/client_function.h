@@ -66,9 +66,11 @@ void Queryinfo(char *usertype,int client_fd);
 void QueryOpration(char *usertype,int client_fd);
 
 
+//判断密码是否符合
+bool isValidInput(const char *str);
 
-
-
+//判断账号是否符合要求
+bool isValidInputaccount(const char *str);
 
 
 

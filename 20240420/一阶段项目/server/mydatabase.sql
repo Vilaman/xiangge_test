@@ -22,3 +22,4 @@ op_port integer not null,
 op_time text not null
 );
 
+insert into UserInfo (user_account,user_password,user_name) values ('admin','ad123','张三')

@@ -22,13 +22,16 @@
 #include <unistd.h>
 #include <time.h>
 #include "server_error.h"
-#include "server_function"
+#include "server_function.h"
 #include "pthread_pool.h"
+#include "server_info.h"
 
 
 
 int main(){
 	//创建服务器套接字
+	pthread_pool pool;
+	pool_init(&pool,5,10);
 	int server_fd;
 	if((server_fd=socket(AF_INET,SOCK_STREAM,0))<0){
 		perror("server_socket");
@@ -41,7 +44,7 @@ int main(){
 	server.sin_addr.s_addr=INADDR_ANY;
 
 	//绑定端口
-	if(bind(server_fd,(struct sockaddr_in *)&server,sizeof(server))<0){
+	if(bind(server_fd,(struct sockaddr*)&server,sizeof(server))<0){
 		perror("bind");
 		exit(2);
 	}
@@ -61,10 +64,10 @@ int main(){
 		//处理客户端连接
 		//保证每个客户端连接保存套接字的是一个新的变量和空间，彼此线程互不影响
 	    Client *c = malloc(sizeof(Client));
-		c->fd = client_fd;
+		c->client_fd = client_fd;
 		c->info =client;
 
-		pool_add_task(&p,handleClient,c);
+		pthread_pool_add_task(&pool,handleClient,c);
 		//输出客户端已连接
 		
 		char *ip = inet_ntoa(client.sin_addr);
@@ -79,10 +82,12 @@ int main(){
 }
 
 //传递的就是指向客户端套接字的指针
-void* handleClient(void* args){
-	//分离
-	pthread_t pid  = pthread_self();
-	pthread_detach(pid);//设置为分离线程
-	Client *c = (Client*)args;
-
+void *handleClient(void *args) {
+  //分离
+  //pthread_t pid = pthread_self();
+  //pthread_detach(pid); //设置为分离线程
+  Client *c = (Client *)args;
+  printf("%d\n",c->client_fd);
+  server_Mainop(c);
+  //free(args); //释放保存客户端套接字的内存，因为是malloc分配的
 }

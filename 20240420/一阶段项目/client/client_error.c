@@ -35,6 +35,8 @@ void Backerror_Client(int Client_error){
 		case QUERYINFO_FAIL:puts("QUERINFO_FAIL_ERROR");break;
 		case QUERYOP_FAIL:puts("QUERYOP_FAIL_ERROR");break;
 		case REGISTER_EXIST_ERROR:puts("REGISTER_EXIST_ERROR");break;
+		case CHANGE_ILLEGAL_ERROR:puts("CHANGE_ILLEGAL_ERROR");break;
+		case DELETE_ILLEGAL_ERROR:puts("DELETE_ILLEGAL_ERROR");break;
 		default:puts("UNDEFINED ERROR");break;
 	}
 }

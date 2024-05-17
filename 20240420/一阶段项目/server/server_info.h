@@ -62,8 +62,6 @@
 
 #define CHANGE_INFO "CHANGE_INFO" //用户修改信息
 
-#define QUERY_INFO "QUERYINFO" //用户查看信息
-
 #define QUERY_LOG "QUERY_LOG" //用户查看日志
 
 #define USER_LOGOUT "USER_LOGOUT" //用户注销登录
@@ -73,7 +71,7 @@
 #define PORT 8088                             //定义端口信息
 #define N 300        //定义客户端和sql语句发送数据字节数
 #define MAXSIZE 2000 //定义接收最大字节数
-#define M 40   //定义操作发送字节数
+#define M 50   //定义操作发送字节数
 #define D 40  //定义接受删除账号最大字节数
 
 
