@@ -37,6 +37,7 @@ void Backerror_Client(int Client_error){
 		case REGISTER_EXIST_ERROR:puts("REGISTER_EXIST_ERROR");break;
 		case CHANGE_ILLEGAL_ERROR:puts("CHANGE_ILLEGAL_ERROR");break;
 		case DELETE_ILLEGAL_ERROR:puts("DELETE_ILLEGAL_ERROR");break;
+		case USER_ISLOGGED_ERROR:puts("USER_ISLOGGED_ERROR");break;
 		default:puts("UNDEFINED ERROR");break;
 	}
 }

@@ -58,9 +58,9 @@
 
 
 
-#define PORT 8088                             //定义端口信息
+#define PORT 8089                             //定义端口信息
 #define N 200        //定义客户端发送数据字节数
-#define MAXSIZE 2200 //定义接收最大字节数
+#define MAXSIZE 9000 //定义接收最大字节数
 #define M 30   //定义操作发送字节数
 
 

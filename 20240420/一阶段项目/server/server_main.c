@@ -61,7 +61,6 @@ int main(){
 	puts("等待连接");
 	while((client_fd =accept(server_fd,(struct sockaddr*)&client,&len))>0){
 		//已连接
-		//处理客户端连接
 		//保证每个客户端连接保存套接字的是一个新的变量和空间，彼此线程互不影响
 	    Client *c = malloc(sizeof(Client));
 		c->client_fd = client_fd;
@@ -69,7 +68,6 @@ int main(){
 
 		pthread_pool_add_task(&pool,handleClient,c);
 		//输出客户端已连接
-		
 		char *ip = inet_ntoa(client.sin_addr);
 		int port = ntohs(client.sin_port);
 		printf("已接受客户端:%s:%d的连接\n",ip,port);
@@ -83,11 +81,10 @@ int main(){
 
 //传递的就是指向客户端套接字的指针
 void *handleClient(void *args) {
-  //分离
-  //pthread_t pid = pthread_self();
-  //pthread_detach(pid); //设置为分离线程
   Client *c = (Client *)args;
-  printf("%d\n",c->client_fd);
-  server_Mainop(c);
-  //free(args); //释放保存客户端套接字的内存，因为是malloc分配的
+  bool isoprun=true;
+  do{
+    isoprun=server_Mainop(c);
+  }while(isoprun);
+  puts("客户下线");
 }

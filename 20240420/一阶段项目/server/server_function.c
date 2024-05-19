@@ -31,15 +31,14 @@
 
 //接收客户端操作函数
 char *confirm_Op(Client *c) {
-  char data[50];
+  char data[60];
   memset(data,0,sizeof(data));
   int readcount = read(c->client_fd, data, sizeof(data) - 1);
   if (readcount > 0) {
     data[readcount] = '\0';
-  } else if (readcount == 0) {
-    return NULL;
+  } else if (readcount <= 0) {
+    return USER_LOGOUT;
   }
-  printf("接收到的操作是:%s\n",data);
   if (strcmp(data, CLIENT_LOGIN) == 0) { //登录
     writedata(LOGIN_ALLOW, c);
     return CLIENT_LOGIN;
@@ -80,19 +79,16 @@ void writedata(char *optype,Client *c){
 	int writecount;
 	char temp[50]="";
 	strcpy(temp,optype);
-	if((writecount=write(c->client_fd,temp,strlen(temp)))<0){
+	if((writecount=write(c->client_fd,temp,strlen(temp)))<=0){
 		perror("write()");
 		exit(-1);
 	}
-		printf("writecount:%d\n",writecount);
-	puts(optype);
 	return;
 }
 
 //主操作函数块
-void server_Mainop(Client *c){
-	while(true){
-		char *opback=confirm_Op(c);
+bool server_Mainop(Client *c){
+	char *opback=confirm_Op(c);
 	if(strcmp(opback,CLIENT_LOGIN)==0){
 		loginMoudle(c);
 	}else if(strcmp(opback,USER_REGISTER)==0){
@@ -105,85 +101,88 @@ void server_Mainop(Client *c){
 		QueryInfoMoudle(c);
 	}else if(strcmp(opback,QUERY_OPRATION)==0){
 		QueryOpMoudle(c);
-	}else{
-		//错误处理
+	}else if(strcmp(opback,USER_LOGOUT)==0){
+		Userlogout(c);
+		return false;
 	}
-	}
-	return;
+	return true;
 }
 
 
 
 //登录模块
 void loginMoudle(Client *c) {
-  puts("ok");
   bool isLogMoudle = true;
   int readcount;
-  char acceptdata[60]="";
+  char acceptdata[60] = "";
   char sql[N];
   char *logaccount;
   char *logpass;
   char *content = "登录系统";
   int count = 1;
-  printf("fd: %d\n",c->client_fd);
   while (isLogMoudle) {
     if ((readcount = read(c->client_fd, acceptdata, sizeof(acceptdata))) > 0) {
       acceptdata[readcount] = '\0';
-	  printf("这时候的值%s\n",acceptdata);
       logaccount = strtok(acceptdata, ",");
       logpass = strtok(NULL, ",");
     } else {
       return;
     }
-    sprintf(sql, "select * from UserInfo where user_account='%s';", logaccount);
-	puts(sql);
     int writecount;
-	char *backdata = SqlQuery(sql, QuerySLData);
-    if (strcmp(backdata,"")!=0) {
-//	puts("1");
+    sprintf(sql,"select * from UserInfo where user_account='%s' and user_isLogin=0;",logaccount);
+    char *backdata = SqlQuery(sql, QuerySLData);
+    if (strcmp(backdata, "") != 0) {
       memset(sql, 0, sizeof(sql));
-      sprintf(sql, "select * from UserInfo where user_account='%s' and user_password='%s';",logaccount, logpass);
-	  puts(sql);
-		char *backdata1 = SqlQuery(sql, QuerySLData);
-		puts(backdata1);
-      if (strcmp(backdata1,"")!=0) {
-		puts("2");
+      sprintf(sql, "select * from UserInfo where user_account='%s';",logaccount);
+      char *backdata = SqlQuery(sql, QuerySLData);
+      if (strcmp(backdata, "") != 0) {
         memset(sql, 0, sizeof(sql));
-		count++;
-        sprintf(sql, "update UserInfo set user_isLogin=1 where user_account='%s';",logaccount);
-        Sqlop(sql);
-        AddOplog(c, USER_LOGIN, content, logaccount);
-        if (strcmp(logaccount, "admin") == 0) {
-          if ((writecount = write(c->client_fd, ADMIN_LOGIN, M)) > 0) {
-            isLogMoudle = false;
-			puts("admin login");
-			return;
-          } else { }
-        } else {
-          if ((writecount = write(c->client_fd, NORMALUSER_LOGIN, M)) > 0) {
-            isLogMoudle = false;
-			puts("user login");
-			return;
-          } else {}
-        }
-      }else{
-		  if(count>=3){
-			  if((writecount=write(c->client_fd,"LOGIN_THREE_TIMES_ERROR",M))>0){
-				isLogMoudle = false;
-				return;			
-			  }
-		  }
-		  if ((writecount = write(c->client_fd,"LOGIN_PASSWORD_ERROR" , M)) > 0) {
-			  count++;
-          } else{}
-	  }
-    }else{	
-		  if ((writecount = write(c->client_fd,"LOGIN_USERNAME_ERROR" , M)) > 0) {
-		
-	puts("6");
+        sprintf(sql,"select * from UserInfo where user_account='%s' and user_password='%s';",logaccount, logpass);
+        char *backdata1 = SqlQuery(sql, QuerySLData);
+        if (strcmp(backdata1, "") != 0) {
+          memset(sql, 0, sizeof(sql));
+          count++;
+          sprintf(sql,"update UserInfo set user_isLogin=1 where user_account='%s';",logaccount);
+          Sqlop(sql);
+          AddOplog(c, USER_LOGIN, content, logaccount);
+          if (strcmp(logaccount, "admin") == 0) {
+            if ((writecount = write(c->client_fd, ADMIN_LOGIN, M)) > 0) {
+              strcpy(c->User, logaccount);
+              isLogMoudle = false;
+              return;
+            } else {
+            }
           } else {
-            //客户端下线
+            if ((writecount = write(c->client_fd, NORMALUSER_LOGIN, M)) > 0) {
+              isLogMoudle = false;
+              strcpy(c->User, logaccount);
+              return;
+            } else {
+            }
           }
+        } else {
+          if (count >= 3) {
+            if ((writecount =write(c->client_fd, "LOGIN_THREE_TIMES_ERROR", M)) > 0) {
+              isLogMoudle = false;
+              return;
+            }
+          }
+          if ((writecount = write(c->client_fd, "LOGIN_PASSWORD_ERROR", M)) > 0) {
+            count++;
+          } else {
+          }
+        }
+      } else {
+        if ((writecount = write(c->client_fd, "LOGIN_USERNAME_ERROR", M)) > 0) {
+        } else {
+          //客户端下线
+        }
+      }
+    }else{
+        if ((writecount = write(c->client_fd, "USER_ISLOGGED_ERROR", M)) > 0) {
+        } else {
+          //客户端下线
+        }
 	}
   }
 }
@@ -217,7 +216,7 @@ void RegisterMoudle(Client *c){
 			//客户端下线
 		}
 	}else{
-		if((writecount=write(c->client_fd,"REGISTER_EXIST_ERROR",M))<0){
+		if((writecount=write(c->client_fd,"REGISTER_EXIST_ERROR",M))<=0){
 			//客户端下线
 		}
 	}
@@ -244,13 +243,13 @@ void DeleteMoudle(Client *c) {
   int writecount;
   if (Sqlop(sql)) {
 	  char temp[50]=DELETE_SUCCESS;
-    if ((writecount = write(c->client_fd, temp, sizeof(temp))) < 0) {
+    if ((writecount = write(c->client_fd, temp, sizeof(temp))) <= 0) {
       //客户端下线或未发送成功
     } else {
       AddOplog(c, DELETE_USER, content,"admin");
     }
   } else {
-    if ((writecount = write(c->client_fd, "DELETE_NOTEXIST_ERROR", M)) < 0) {
+    if ((writecount = write(c->client_fd, "DELETE_NOTEXIST_ERROR", M)) <= 0) {
       //客户端下线或者未发送出
       return;
     }
@@ -266,7 +265,7 @@ void ChangeMoudle(Client *c) {
   int readcount;
   int writecount;
   char sql[N]="";
-  char *content = "删除用户";
+  char *content = "修改用户信息";
   if((readcount=read(c->client_fd,data,sizeof(data)-1))>0){
 	  data[readcount]='\0';
   }else{
@@ -283,13 +282,13 @@ void ChangeMoudle(Client *c) {
   sprintf(sql,"update UserInfo set user_name='%s',user_password='%s',user_sex='%s',user_age=%d,user_address='%s' where user_account='%s';",name,pass,sex,age,address,account);
   puts(sql);
   if (Sqlop(sql)) {
-    if ((writecount = write(c->client_fd, CHANGE_SUCCESS, M)) < 0) {
+    if ((writecount = write(c->client_fd, CHANGE_SUCCESS, M)) <= 0) {
       //客户端下线或未发送成功
     } else {
       AddOplog(c, CHANGE_INFO, content,account);
     }
   } else {
-    if ((writecount = write(c->client_fd, "CHANGE_NOTEXIST_ERROR", M)) < 0) {
+    if ((writecount = write(c->client_fd, "CHANGE_NOTEXIST_ERROR", M)) <= 0) {
 
       //客户端下线或者未发送出
       return;
@@ -321,13 +320,13 @@ void QueryInfoMoudle(Client *c) {
   sprintf(sql, "select * from UserInfo where user_account='%s';", recvdata);
   strcpy(data, SqlQuery(sql, QueryAllData));
   if (strcmp(data, "") != 0) {
-    if ((writecount = write(c->client_fd, data, sizeof(data))) < 0) {
+    if ((writecount = write(c->client_fd, data, sizeof(data))) <= 0) {
       //客户端下线或未发送成功
     } else {
       AddOplog(c, QUERY_INFO, content, recvdata);
     }
   } else {
-    if ((writecount = write(c->client_fd, "QUERYINFO_FAIL", M)) < 0) {
+    if ((writecount = write(c->client_fd, "QUERYINFO_FAIL", M)) <= 0) {
 
       //客户端下线或者未发送出
       return;
@@ -357,17 +356,14 @@ void QueryOpMoudle(Client *c) {
   }
   sprintf(sql, "select * from Userlog where op_account='%s';", recvdata);
   strcpy(data, SqlQueryHistory(sql, QueryAllData));
-  char *temp=SqlQueryHistory(sql,QueryAllData);//因为是malloc申请的用完释放
-  free(temp);
-  temp=NULL;
   if (strcmp(data, "") != 0) {
-    if ((writecount = write(c->client_fd, data, sizeof(data))) < 0) {
+    if ((writecount = write(c->client_fd, data, sizeof(data))) <= 0) {
       //客户端下线或未发送成功
     } else {
       AddOplog(c, QUERY_LOG, content, recvdata);
     }
   } else {
-    if ((writecount = write(c->client_fd, "QUERYOP_FAIL", M)) < 0) {
+    if ((writecount = write(c->client_fd, "QUERYOP_FAIL", M)) <= 0) {
 
       //客户端下线或者未发送出
       return;
@@ -518,9 +514,12 @@ void AddOplog(Client *c, char *optype, char *content, char *user) {
 
 
 //客户端注销
-void Userlogout(Client *c,char *user){
+void Userlogout(Client *c){
 char sql[N]="";
-char *content = "查询操作历史";
-AddOplog(c, USER_LOGOUT, content,user);
+char sql1[N]="";
+char *content = "用户注销";
+sprintf(sql1,"update UserInfo set user_isLogin=0 where user_account='%s';",c->User);
+Sqlop(sql1);
+AddOplog(c, USER_LOGOUT, content,c->User);
 return;
 }

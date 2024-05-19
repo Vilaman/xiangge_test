@@ -68,9 +68,9 @@
 
 
 
-#define PORT 8088                             //定义端口信息
+#define PORT 8089                             //定义端口信息
 #define N 300        //定义客户端和sql语句发送数据字节数
-#define MAXSIZE 2000 //定义接收最大字节数
+#define MAXSIZE 8000 //定义接收最大字节数
 #define M 50   //定义操作发送字节数
 #define D 40  //定义接受删除账号最大字节数
 
