@@ -1,0 +1,32 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/testFunc.h
+
+../include/testFunc1.h
+
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/main.c
+stdio.h
+-
+testFunc.h
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/testFunc.h
+testFunc1.h
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/testFunc1.h
+
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/testFunc.c
+stdio.h
+-
+testFunc.h
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/testFunc.h
+
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/testFunc1.c
+stdio.h
+-
+testFunc1.h
+/home/zhao/test/xiangge_test/Project_z_test/cmake/src/testFunc1.h
+
