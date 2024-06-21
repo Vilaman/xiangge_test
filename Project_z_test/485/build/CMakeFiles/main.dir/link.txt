@@ -1,0 +1,1 @@
+aarch64-linux-gnu-g++   -g -fPIC  -rdynamic CMakeFiles/main.dir/SysGpio.cpp.o CMakeFiles/main.dir/comServer.cpp.o CMakeFiles/main.dir/main.cpp.o  -o ../bin/main 

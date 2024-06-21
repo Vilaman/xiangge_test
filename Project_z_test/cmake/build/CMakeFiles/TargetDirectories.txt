@@ -1,3 +1,0 @@
-/home/zhao/test/xiangge_test/Project_z_test/cmake/build/CMakeFiles/rebuild_cache.dir
-/home/zhao/test/xiangge_test/Project_z_test/cmake/build/CMakeFiles/edit_cache.dir
-/home/zhao/test/xiangge_test/Project_z_test/cmake/build/CMakeFiles/main.dir
