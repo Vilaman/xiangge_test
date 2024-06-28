@@ -1,4 +1,4 @@
-# test
+# 面经
 
 ## 1.请你分别介绍一下单元测试、集成测试、系统测试、验收测试、回归测试
 
@@ -1082,6 +1082,662 @@ XXXXXXX
 
 1、检查网络连接是否稳定，更换网络尝试
 
-2、更新头条版本尝试 
+ 2、更新头条版本尝试 
 
 3、清除app缓存，应用数据
+
+## 61.请问如何判断一个单向链表存在回路
+
+    bool hasCycle(ListNode *head) {
+            if(head == nullptr){
+                return false;
+            }
+            ListNode* fast = head;
+            ListNode* slow = head;
+            while(fast != nullptr && fast->next != nullptr){
+                fast = fast->next->next;
+                slow = slow->next;
+                if(fast == slow){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+快慢指针 快走2 慢走1
+
+## 62.请问如何判断两个链表是否相交
+
+    ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+            if(headA==NULL)return NULL;
+            if(headB==NULL)return NULL;
+            ListNode*pa=headA;
+            ListNode*pb=headB;
+            while(pa!=pb){
+                pa=pa==nullptr?headB:pa->next;
+                pb=pb==nullptr?headA:pb->next;
+            }
+            return pa;
+        }
+
+首先，我们需要明确一个链表如果存在相交，那么一定是形成一个“Y”字。
+
+所以第一步：先计算两个链表总长度。将长链表的指针移动到和短链表一样的地方。
+
+同时向下一步运行，如果在中途出现相等的情况就说明是相交的。
+
+反之，当两条链表下一个都为空时，则是不相交的。
+
+## 63.循环链表插入元素
+
+    #include <iostream>
+    using namespace std;
+    
+    struct ListNode {
+        int value;
+        ListNode *next;
+        ListNode(int x) : value(x), next(nullptr){}
+    };
+    
+    
+    ListNode* insertIntoCircularLinkedList(ListNode *head, it val) {
+        ListNode* newNode = new ListNode(val);
+        if (!head) {
+            // 如果链表为空，新节点指向自己，形成一个环
+            newNode->next = newNode;
+            return newNode;
+        }
+    
+        ListNode* current = head;
+        while (true) {
+            // 如果当前节点的下一个节点是头节点，或者找到了合适的插入位置
+            if (current->next == head || (current->value <= val && val <= current->next->value) || (current->value > current->next->value && (val < current->next->value || val > current->value))) {
+                // 插入新节点
+                newNode->next = current->next;
+                current->next = newNode;
+                break;
+            }
+            current = current->next;
+        }
+        return head;
+    }
+    
+    
+    int main() {
+        // 创建循环链表示例: 3 -> 4 -> 1 -> ...
+        ListNode* head = new ListNode(3);
+        head->next = new ListNode(4);
+        head->next->next = new ListNode(1);
+        head->next->next->next = head; // 创建环
+    
+        // 插入新元素
+        head = insertIntoCircularLinkedList(head, 2);
+    
+        // 打印验证
+        ListNode* temp = head;
+        for (int i = 0; i < 4; ++i) { // 只打印四个元素避免无限循环
+            cout << temp->value << " -> ";
+            temp = temp->next;
+        }
+        cout << "(回到头节点)" << endl;
+    
+        return 0;
+    }
+
+## 64.合并两个排序数组
+
+    ListNode* Merge(ListNode* pHead1, ListNode* pHead2) {
+            // write code here
+            if(pHead1==nullptr){
+                return pHead2;
+            }
+            if(pHead2==nullptr){
+                return pHead1;
+            }
+            ListNode* head = new ListNode(0);
+            ListNode* curr = head;
+            while(pHead1 && pHead2){
+                if(pHead1->val <= pHead2->val){
+                    curr->next = pHead1;
+                    pHead1 = pHead1->next;
+                }
+                else{
+                    curr->next = pHead2;
+                    pHead2 = pHead2->next;
+                }
+                curr = curr->next;
+            }
+            if(pHead1){
+                curr->next=pHead1;
+            }
+            else{
+                curr->next=pHead2;
+        }
+        return head->next;
+    }
+
+## 65.最大子数组问题（要求时间复杂度最佳）
+
+    #include <iostream>
+    using namespace std;
+    
+    int MaxSubSum(int *arr, int len) {
+        int MaxSum = 0;
+        int CurSum = 0;
+        for(int i = 0; i < len; i++) {
+            CurSum += arr[i];
+            if(CurSum > MaxSum) {
+                MaxSum = CurSum;
+            }
+            if(CurSum < 0) {
+                CurSum = 0;
+            }
+        }
+        return MaxSum;
+    }
+    
+    int main() {
+        int arr[] = {-2, 1, -3, 4, -1, 2, 1, -5, 4};
+        int len = sizeof(arr) / sizeof(arr[0]);
+        int maxSum = MaxSubSum(arr, len);
+        cout << "The maximum subarray sum is: " << maxSum << endl;
+        return 0;
+    }
+
+## 66.写出一个函数，输入是两个数组，输出是将两个数组中所有元素排序以后用一个数组输出。
+
+    #include <iostream>
+    #include <vector>
+    #include <algorithm> // 用于std::sort
+    
+    void mergeAndSortArrays(const std::vector<int>& arr1, const std::vector<int>& arr2, std::vector<int>& result) {
+        // 将两个数组的元素合并到result中
+        result.clear(); // 确保result是空的
+        result.insert(result.end(), arr1.begin(), arr1.end()); // 将arr1的元素添加到result
+        result.insert(result.end(), arr2.begin(), arr2.end()); // 将arr2的元素添加到result
+    
+        // 对result数组中的元素进行排序
+        std::sort(result.begin(), result.end());
+    }
+    
+    int main() {
+        std::vector<int> arr1 = {5, 3, 1};
+        std::vector<int> arr2 = {4, 2, 6};
+        std::vector<int> result;
+    
+        mergeAndSortArrays(arr1, arr2, result);
+    
+        // 打印排序后合并的数组
+        std::cout << "Merged and Sorted Array: ";
+        for (int num : result) {
+            std::cout << num << " ";
+        }
+        std::cout << std::endl;
+    
+        return 0;
+    }
+
+## 67.请问如何防止数组越界
+
+1.使用标准容器类
+
+2.显式检查索引值
+
+3.使用固定大小的循环
+
+4.边界检查宏或内联函数
+
+5.使用现代C++特性
+
+6.单元测试
+
+## 68.请回答数组和链表的区别，以及优缺点，另外有没有什么办法能够结合两者的优点
+
+1.数组： 数组是将元素在内存中连续存放，由于每个元素占用内存相同，可以通过下标迅速访问数组中任何元素。但是如果要在数组中增加一个元素，需要移动大量元素，在内存中空出一个元素的空间，然后将要增加的元素放在其中。同样的道理，如果想删除一个元素，同样需要移动大量元素去填掉被移动的元素。如果应用需要快速访问数据，很少插入和删除元素，就应该用数组。
+
+2.链表： 链表中的元素在内存中不是顺序存储的，而是通过存在元素中的指针联系到一起，每个结点包括两个部分：一个是存储数据元素的数据域，另一个是存储下一个结点地址的指针。如果要访问链表中一个元素，需要从第一个元素开始，一直找到需要的元素位置。但是增加和删除一个元素对于链表数据结构就非常简单了，只要修改元素中的指针就可以了。如果应用需要经常插入和删除元素你就需要用链表。
+
+3.区别：
+
+（1）存储位置上： 数组逻辑上相邻的元素在物理存储位置上也相邻，而链表不一定；
+
+（2）存储空间上： 链表存放的内存空间可以是连续的，也可以是不连续的，数组则是连续的一段内存空间。一般情况下存放相同多的数据数组占用较小的内存，而链表还需要存放其前驱和后继的空间。
+
+（3）长度的可变性： 链表的长度是按实际需要可以伸缩的，而数组的长度是在定义时要给定的，如果存放的数据个数超过了数组的初始大小，则会出现溢出现象。
+
+（4）按序号查找时，数组可以随机访问，时间复杂度为O(1)，而链表不支持随机访问，平均需要O(n)；
+
+（5）按值查找时，若数组无序，数组和链表时间复杂度均为O(1)，但是当数组有序时，可以采用折半查找将时间复杂度降为O(logn)；
+
+（6）插入和删除时，数组平均需要移动n/2个元素，而链表只需修改指针即可；
+
+（7）空间分配方面： 数组在静态存储分配情形下，存储元素数量受限制，动态存储分配情形下，虽然存储空间可以扩充，但需要移动大量元素，导致操作效率降低，而且如果内存中没有更大块连续存储空间将导致分配失败；即数组从栈中分配空间,，对于程序员方便快速,但自由度小。
+
+链表存储的节点空间只在需要的时候申请分配，只要内存中有空间就可以分配，操作比较灵活高效；即链表从堆中分配空间, 自由度大但申请管理比较麻烦。 哈希表可以结合数组和链表的优点
+
+## 69.请问Java中collection的sort方法，默认的排序方法是什么
+
+排序方法是归并排序 --------.......无语了
+
+## 70.合并两个排序数组
+
+    #include <iostream>
+    #include <vector>
+    
+    std::vector<int> mergeSortedArrays(const std::vector<int>& arr1, const std::vector<int>& arr2) {
+        std::vector<int> result;
+        int i = 0, j = 0;
+        while (i < arr1.size() && j < arr2.size()) {
+            if (arr1[i] < arr2[j]) {
+                result.push_back(arr1[i]);
+                ++i;
+            } else {
+                result.push_back(arr2[j]);
+                ++j;
+            }
+        }
+        // 复制剩余的元素
+        while (i < arr1.size()) {
+            result.push_back(arr1[i]);
+            ++i;
+        }
+        while (j < arr2.size()) {
+            result.push_back(arr2[j]);
+            ++j;
+        }
+        return result;
+    }
+    
+    int main() {
+        std::vector<int> arr1 = {1, 3, 5, 7};
+        std::vector<int> arr2 = {2, 4, 6, 8};
+        std::vector<int> mergedArray = mergeSortedArrays(arr1, arr2);
+        std::cout << "Merged Array: ";
+        for (int num : mergedArray) {
+            std::cout << num << " ";
+        }
+        std::cout << std::endl;
+        return 0;
+    }
+
+## 71.冒泡排序
+
+    //冒泡排序
+    void bubbleSort(std::vector<int>& nums) {
+        int n = nums.size();
+        for (int j = n; j > 0; j--) {
+            bool flag = true;
+            for (int i = 0; i < j - 1; i++) {
+                //需要交换，代表是无序的
+                if (nums[i] > nums[i + 1]) {
+                    flag = false;
+                    std::swap(nums[i], nums[i + 1]);
+                }
+            }
+            if (flag == true) {
+                return;
+            }
+        }
+    }
+
+## 72.统计排序数组中出现次数最多的元素出现的次数？
+
+    #include <iostream>
+    #include <vector>
+    
+    std::pair<int, int> findMostFrequent(const std::vector<int>& sortedArray) {
+        int maxCount = 1; // 最大出现次数
+        int currentCount = 1; // 当前元素的出现次数
+        int mostFrequentElement = sortedArray[0]; // 最频繁出现的元素
+        int currentElement = sortedArray[0]; // 当前正在检查的元素
+        for (size_t i = 1; i < sortedArray.size(); ++i) {
+            if (sortedArray[i] == currentElement) {
+                ++currentCount;
+            } else {
+                if (currentCount > maxCount) {
+                    maxCount = currentCount;
+                    mostFrequentElement = currentElement;
+                }
+                currentElement = sortedArray[i];
+                currentCount = 1;
+            }
+        }
+        // 最后一个元素的处理
+        if (currentCount > maxCount) {
+            maxCount = currentCount;
+            mostFrequentElement = currentElement;
+        }
+        return {mostFrequentElement, maxCount};
+    }
+    
+    int main() {
+        std::vector<int> sortedArray = {1, 2, 2, 2, 3, 3, 4, 4, 4, 4, 5};
+        auto result = findMostFrequent(sortedArray);
+        std::cout << "Most frequent element: " << result.first << ", Count: " << result.second << std::endl;
+        return 0;
+    }
+
+## 73.请你说一下Spring AOP
+
+即面向切面编程，可以说是OOP的补充和完善。
+
+## 74.请问J2EE 上 request 请求先经过谁 然后再转交到 SpringMVC上
+
+DispatcherServlet
+
+## 75.请你回答一下Filter主要是做什么的，filter和Servlet先过哪个，FilterChn 是什么意思
+
+Filter：过滤器，过滤器是一些web应用程序组件，可以绑定到一个web应用程序中，但是与其他web应用程序组件不同的是，过滤器是链在容器的处理过程中的，这就意味它们会在servlet处理器之前访问一个进入的请求，并且在外发响应信息返回到客户前访问这些响应信息。这种访问使得过滤器可以检查并修改请求和响应的内容。 filter和Servlet先过哪个 先执行filter再执行servlet，servlet执行完后再执行filter FilterChn 是什么意思 过滤链FilterChn 两个过滤器，EncodingFilter负责设置编码，SecurityFilter负责控制权限，服务器会按照web.xml中过滤器定义的先后循序组装成一条链，然后一次执行其中的doFilter()方法。执行的顺序就如下图所示，执行第一个过滤器的chn.doFilter()之前的代码，第二个过滤器的chn.doFilter()之前的代码，请求的资源，第二个过滤器的chn.doFilter()之后的代码，第一个过滤器的chn.doFilter()之后的代码，最后返回响应。
+
+## 76.请你说一说关于linux查看进程
+
+1.win:ps -aux | grep 进程名
+
+2.linux:ps -ef | grep 进程名
+
+## 77.请你说几个基本Linux命令
+
+1.cd 切换目录，2.mkdir创建目录,3.mv移动或重命名 ,4.cp复制, 5.touch 创建文件 6.vi编辑器，创建文件，7.find查找8.cat/tail/head/less查看 9.ps-ef查看进程 10.ifconfig 查看ip地址 11.rm删除
+
+## 78.请你说一说Linux命令（查看进程、top命令、查看磁盘）
+
+查看进程：
+
+ps 命令：用于列出当前正在运行的进程的快照。
+
+top 命令：实时显示系统的进程状态，包括 CPU 使用率、内存占用、进程 ID 等信息。使用 top 命令：
+
+top 命令：显示系统的实时进程状态。按Shift+M 可以按照内存使用排序进程（最耗内存的进程在顶部）。
+
+查看磁盘：
+
+df 命令：显示文件系统的磁盘空间使用情况，包括每个挂载点的使用空间。
+
+du 命令：用于估算文件和目录的磁盘空间使用情况。
+
+## 79.请你说一下vector的特性
+
+vector特点是： 其容量在需要时可以自动分配，可以在运行时高效地添加元素，本质上是数组形式的存储方式。即在索引可以在常数时间内完成。缺点是在插入或者删除一项时，需要线性时间。但是在尾部插入或者删除，是常数时间的。
+
+## 80.查看端口号、进程的指令是？动态查看日志的指令？怎么判断一个端口存不存在，磁盘满了怎么处理，删除一个目录下的txt文件，你还熟悉其他什么linux指令？
+
+查看端口号的两种指令: netstat –tunlp|grep 端口号 lsof -i:端口号 查询进程的指令 ps -ef |grep 进程 ps:将某个进程显示出来 -A 　显示所有程序。 -e 　此参数的效果和指定"A"参数相同。 -f 　显示UID,PPIP,C与STIME栏位。 动态查看日志
+
+1、先切换到：cd usr/local/tomcat5/logs
+
+2、tl -f catalina.out 
+
+3、这样运行时就可以实时查看运行日志了 怎么判断一个端口存不存在： netstat -anp |grep 端口号，在输出结果中看监控状态为LISTEN表示已经被占用，最后一列显示被服务mysqld占用，查看具体端口号，只要有如图这一行就表示被占用了。 磁盘满了怎么处理
+
+ 1. df -h 查看是哪个挂在目录满了，常常是根目录/占满
+
+ 2. 快速定位一下应用日志大小情况，比如tomcat日志，应用系统自己的日志等。
+
+ 3. 如果能直观地看到日志文件过大，则酌情进行删除。有时候删除日志文件之后再df -h查看空间依然被占满，继续排查。 lsof file_name 查看文件占用进程情况，如果删除的日志正在被某个进程占用，则必须重启或者kill掉进程。
+
+ 4. 如果不能直观地排除出是某个日志多大的原因，就需要看一下指定目录下的文件和子目录大小情况，使用du命令。 删除一个目录下的txt文件 find . -name "*.txt" | xargs rm -rf 我还熟悉文本编辑指令。
+
+## 81.请你说一下HTTP的报文段是什么样的？
+
+1. **请求行**：包含请求方法（GET、POST等）、请求的URL和协议版本。
+2. **请求头部**：包含多个键值对，描述请求的各种属性，如`Host`、`User-Agent`等。
+3. **空行**：仅包含换行符，用于分隔头部和请求体。
+4. **请求体**（可选）：包含请求的数据，如在POST请求中发送的表单数据。
+
+## 82.请你回答一下HTTP用的什么连接？
+
+在HTTP/1.0中，默认使用的是短连接。
+
+也就是说，浏览器和服务器每进行一次HTTP操作，就建立一次连接，但任务结束就中断连接。如果客户端浏览器访问的某个HTML或其他类型的 Web页中包含有其他的Web资源，如JavaScript文件、图像文件、CSS文件等；当浏览器每遇到这样一个Web资源，就会建立一个HTTP会话。
+
+但从HTTP/1.1起，默认使用长连接，用以保持连接特性。
+
+使用长连接的HTTP协议，会在响应头有加入这行代码：Connection:keep-alive 在使用长连接的情况下，当一个网页打开完成后，客户端和服务器之间用于传输HTTP数据的 TCP连接不会关闭，如果客户端再次访问这个服务器上的网页，会继续使用这一条已经建立的连接。Keep-Alive不会永久保持连接，它有一个保持时间，可以在不同的服务器软件（如Apache）中设定这个时间。实现长连接要客户端和服务端都支持长连接。
+
+## 83.请你说一下在浏览器中输入一个网址它的运行过程是怎样的？
+
+**总结**
+
+1、DNS解析（1）查找浏览器缓存（2）查找本地DNS解析器缓存（3）查找首选服务器（4）查找根服务器
+
+2、请求解析出的ip及端口号
+
+3、服务器响应数据
+
+4、浏览器解析响应数据
+
+5、关闭连接
+
+1、查询DNS，获取域名对应的IP。 
+
+（1）检查浏览器缓存、检查本地hosts文件是否有这个网址的映射，如果有，就调用这个IP地址映射，解析完成。 
+
+ （2）如果没有，则查找本地DNS解析器缓存是否有这个网址的映射，如果有，返回映射，解析完成。 
+
+ （3）如果没有，则查找填写或分配的首选DNS服务器，称为本地DNS服务器。服务器接收到查询时： 如果要查询的域名包含在本地配置区域资源中，返回解析结果，查询结束，此解析具有权威性。 如果要查询的域名不由本地DNS服务器区域解析，但服务器缓存了此网址的映射关系，返回解析结果，查询结束，此解析不具有权威性。 
+
+ （4）如果本地DNS服务器也失效：  如果未采用转发模式（迭代），本地DNS就把请求发至13台根DNS，根DNS服务器收到请求后，会判断这个域名（如.com）是谁来授权管理，并返回一个负责该顶级域名服务器的IP，本地DNS服务器收到顶级域名服务器IP信息后，继续向该顶级域名服务器IP发送请求，该服务器如果无法解析，则会找到负责这个域名的下一级DNS服务器（如[http://baidu.com](http://baidu.com/)）的IP给本地DNS服务器，循环往复直至查询到映射，将解析结果返回本地DNS服务器，再由本地DNS服务器返回解析结果，查询完成。  如果采用转发模式（递归），则此DNS服务器就会把请求转发至上一级DNS服务器，如果上一级DNS服务器不能解析，则继续向上请求。最终将解析结果依次返回本地DNS服务器，本地DNS服务器再返回给客户机，查询完成。
+
+ 2、得到目标服务器的IP地址及端口号（http 80端口，https 443端口），会调用系统库函数socket，请求一个TCP流套接字。客户端向服务器发送HTTP请求报文： 
+
+ （1）应用层：客户端发送HTTP请求报文。 
+
+ （2）传输层：（加入源端口、目的端口）建立连接。实际发送数据之前，三次握手客户端和服务器建立起一个TCP连接。 
+
+ （3）网络层：（加入IP头）路由寻址。 
+
+ （4）数据链路层：（加入frame头）传输数据。 
+
+ （5）物理层：物理传输bit。
+
+ 3、服务器端经过物理层→数据链路层→网络层→传输层→应用层，解析请求报文，发送HTTP响应报文。
+
+ 4、关闭连接，TCP四次挥手。
+
+ 5、客户端解析HTTP响应报文，浏览器开始显示HTML
+
+## 84.请你说一说http请求报文
+
+1、请求方法 GET：请求获取Request——URL所标识的资源 POST：在Request——URL所标识的资源后附加资源 HEAD：请求获取由Request——URL所标识的资源的响应消息报头 PUT：请求服务器存储一个资源，由Request——URL作为其标识 DELETE：请求服务器删除由Request——URL所标识的资源 TRACE：请求服务器回送收到的请求信息（用于测试和诊断） CONNECT：保留 OPTIONS：请求查询服务器性能 
+
+ 2、URL URI全名为Uniform Resource Indentifier（统一资源标识），用来唯一的标识一个资源，是一个通用的概念，URI由两个主要的子集URL和URN组成。URL全名为Uniform Resource Locator（统一资源定位），通过描述资源的位置来标识资源。URN全名为Uniform Resource Name（统一资源命名），通过资源的名字来标识资源，与其所处的位置无关，这样即使资源的位置发生变动，其URN也不会变化。 
+
+ 3、协议版本 格式为HTTP/主版本号.次版本号，常用为：HTTP/1.1 HTTP/1.0 
+
+ 4、请求头部 Host：接受请求的服务器地址，可以是IP或者是域名 User-Agent：发送请求的应用名称 Connection：指定与连接相关的属性，例如（Keep_Alive，长连接） Accept-Charset：通知服务器端可以发送的编码格式 Accept-Encoding：通知服务器端可以发送的数据压缩格式 Accept-Language：通知服务器端可以发送的语言
+
+## 85.请你说一下tcp和udp的区别
+
+1、TCP面向连接（如打电话要先拨号建立连接）;UDP是无连接的，即发送数据之前不需要建立连接 
+
+2、TCP提供可靠的服务。也就是说，通过TCP连接传送的数据，无差错，不丢失，不重复，且按序到达;UDP尽最大努力交付，即不保 证可靠交付 
+
+ 3、TCP面向字节流，实际上是TCP把数据看成一连串无结构的字节流;UDP是面向报文的，应用层交给UDP多长的报文，UDP就照样发送，即一次发送一个报文。UDP没有拥塞控制，因此网络出现拥塞不会使源主机的发送速率降低（对实时应用很有用，如IP电话，实时视频会议等） 4、每一条TCP连接只能是点到点的;UDP支持一对一，一对多，多对一和多对多的交互通信 
+
+ 5、TCP首部开销20字节;UDP的首部开销小，只有8个字节
+
+ 6、TCP的逻辑通信信道是全双工的可靠信道，UDP则是不可靠信道
+
+## 86.请你说一下为什么tcp可靠，哪些方法保证可靠
+
+[1] 确认和重传机制 建立连接时三次握手同步双方的“序列号 + 确认号 + 窗口大小信息”，是确认重传、流控的基础 传输过程中，如果Checksum校验失败、丢包或延时，发送端重传。 
+
+ [2] 数据排序 TCP有专门的序列号SN字段，可提供数据re-order
+
+ [3] 流量控制 滑动窗口和计时器的使用。TCP窗口中会指明双方能够发送接收的最大数据量，发送方通过维持一个发送滑动窗口来确保不会发生由于发送方报文发送太快接收方无法及时处理的问题。
+
+ [4] 拥塞控制 TCP的拥塞控制由4个核心算法组成： “慢启动”（Slow Start） “拥塞避免”（Congestion avoidance） “快速重传 ”（Fast Retransmit） “快速恢复”（Fast Recovery）
+
+## 87.请你说一说TCP的流量控制
+
+滑动窗口机制： 滑动窗口协议的基本原理就是在任意时刻，发送方都维持了一个连续的允许发送的帧的序号，称为发送窗口；同时，接收方也维持了一个连续的允许接收的帧的序号，称为接收窗口。发送窗口和接收窗口的序号的上下界不一定要一样，甚至大小也可以不同。不同的滑动窗口协议窗口大小一般不同。发送方窗口内的序列号代表了那些已经被发送，但是还没有被确认的帧，或者是那些可以被发送的帧。 举例： 发送和接受方都会维护一个数据帧的序列，这个序列被称作窗口。发送方的窗口大小由接受方确定，目的在于控制发送速度，以免接受方的缓存不够大，而导致溢出，同时控制流量也可以避免网络拥塞。图中的4,5,6号数据帧已经被发送出去，但是未收到关联的ACK，7,8,9帧则是等待发送。可以看出发送端的窗口大小为6，这是由接受端告知的（事实上必须考虑拥塞窗口cwnd，这里暂且考虑cwnd>rwnd）。此时如果发送端收到4号ACK，则窗口的左边缘向右收缩，窗口的右边缘则向右扩展，此时窗口就向前“滑动了”，即数据帧10也可以被发送。
+
+## 88.请你回答一下TCP三次握手，以及为什么不是两次
+
+第一次握手：建立连接时，客户端发送syn包（syn=j）到服务器，并进入SYN_SENT状态，等待服务器确认；SYN：同步序列编号（Synchronize Sequence Numbers）。
+
+第二次握手：服务器收到syn包，必须确认客户的SYN（ack=j+1），同时自己也发送一个SYN包（syn=k），即SYN+ACK包，此时服务器进入SYN_RECV状态；
+
+第三次握手：客户端收到服务器的SYN+ACK包，向服务器发送确认包ACK(ack=k+1），此包发送完毕，客户端和服务器进入ESTABLISHED（TCP连接成功）状态，完成三次握手。
+
+为什么不是两次： 在服务端对客户端的请求进行回应(第二次握手)后，就会理所当然的认为连接已建立，而如果客户端并没有收到服务端的回应呢？此时，客户端仍认为连接未建立，服务端会对已建立的连接保存必要的资源，如果大量的这种情况，服务端会崩溃。
+
+## 89.请你说一说osi七层模型
+
+物理层，链路层，网络层，传输层，会话层，表示层，应用层
+
+## 90.请你说一说DNS解析过程
+
+DNS解析：
+
+1.查浏览器缓存，查到则返回IP 。
+
+2.没有查到浏览器缓存就去DNS解析器缓存里查。
+
+3.还没查到就去本地DNS服务器查
+
+4.本地DNS失效就去向13台根DNS服务器请求
+
+5.根DNS服务器返回顶级域名逐层向下查询直到查询到并返回映射。
+
+## 91.请你说一下常用设计模式
+
+单例模式（Singleton Pattern）：确保一个类只有一个实例，并提供一个全局访问点。
+
+工厂模式（Factory Pattern）：定义一个创建对象的接口，但由子类决定要实例化的类是哪一个。
+
+观察者模式（Observer Pattern）：定义了一种一对多的依赖关系，当一个对象的状态发生改变时，其依赖的对象都会收到通知。
+
+装饰器模式（Decorator Pattern）：动态地给一个对象添加新的功能，是继承的一种替代方案。
+
+适配器模式（Adapter Pattern）：将一个类的接口转换成客户希望的另一个接口，使得原本由于接口不兼容而不能一起工作的类可以一起工作。
+
+策略模式（Strategy Pattern）：定义了一系列算法，将每个算法封装起来，使它们可以互相替换。
+
+模板方法模式（Template Method Pattern）：定义了一个操作中的算法框架，将一些步骤的实现延迟到子类中。
+
+建造者模式（Builder Pattern）：将一个复杂对象的构建与表示分离，使同样的构建过程可以创建不同的表示。
+
+原型模式（Prototype Pattern）：通过复制现有对象来创建新对象，而不是通过实例化对象来创建。
+
+责任链模式（Chain of Responsibility Pattern）：将请求的发送者和接收者解耦，使多个对象都有机会处理该请求，直到有一个对象处理它为止。
+
+## 92.请问设计模式是什么？
+
+设计模式是一种代码设计思想或经验的总结，是面对特定场景特定问题的一种解决方案。它可以提高代码的可读性、可维护性和可扩展性。
+
+## 93.请你手写一下单例模式代码
+
+    #include <iostream>
+    
+    class Singleton {
+    private:
+        static Singleton* instance; // Private static pointer to hold the single instance
+        int data; // Example member variable
+    
+        // Private constructor to prevent instantiation
+        Singleton() {
+            data = 0; // Initialize example member variable
+        }
+    
+    public:
+        // Static method to get the single instance of Singleton
+        static Singleton* getInstance() {
+            if (instance == nullptr) {
+                instance = new Singleton(); // Create the instance if it doesn't exist
+            }
+            return instance; // Return the single instance
+        }
+    
+        // Example method to demonstrate the Singleton instance
+        void setData(int value) {
+            data = value;
+        }
+    
+        // Example method to demonstrate the Singleton instance
+        int getData() {
+            return data;
+        }
+    };
+
+## 94.请你说几个海量数据存储常见问题以及如何解答
+
+例子1：给你A,B两个文件，各存放50亿条URL，每条URL占用64字节，内存限制是4G，让你找出A,B文件共同的URL。 思路：可以估计每个文件安的大小为5G×64=320G，远远大于内存限制的4G。所以不可能将其完全加载到内存中处理。考虑采取分而治之的方法。 • 分而治之/hash映射：遍历文件a，对每个url求取，然后根据所取得的值将url分别存储到1000个小文件（记为）中。这样每个小文件的大约为300M。遍历文件b，采取和a相同的方式将url分别存储到1000小文件中（记为）。这样处理后，所有可能相同的url都在对应的小文件（）中，不对应的小文件不可能有相同的url。然后我们只要求出1000对小文件中相同的url即可。 • hash统计：求每对小文件中相同的url时，可以把其中一个小文件的url存储到hash_set中。然后遍历另一个小文件的每个url，看其是否在刚才构建的hash_set中，如果是，那么就是共同的url，存到文件里面就可以了。 例子2：有10个文件，每个文件1G， 每个文件的每一行都存放的是用户的query，每个文件的query都可能重复。要你按照query的频度排序 思路： • hash映射：顺序读取10个文件，按照hash(query)%10的结果将query写入到另外10个文件（记为）中。这样新生成的文件每个的大小大约也1G（假设hash函数是随机的）。 • hash统计：找一台内存在2G左右的机器，依次对用hash_map(query, query_count)来统计每个query出现的次数。注：hash_map(query,query_count)是用来统计每个query的出现次数，不是存储他们的值，出现一次，则count+1。 • 堆/快速/归并排序：利用快速/堆/归并排序按照出现次数进行排序。将排序好的query和对应的query_cout输出到文件中。这样得到了10个排好序的文件（记为）。对这10个文件进行归并排序（内排序与外排序相结合）。 例子3：有一个1G大小的一个文件，里面每一行是一个词，词的大小不超过16个字节，内存限制大小是1M。返回频数最高的100个词 思路： • 分而治之/hash映射：顺序读文件中，对于每个词x，取hash(x)%5000，然后按照该值存到5000个小文件（记为x0,x1,...x4999）中。这样每个文件大概是200k左右。如果其中的有的文件超过了1M大小，还可以按照类似的方法继续往下分，直到分解得到的小文件的大小都不超过1M。 • hash统计：对每个小文件，采用trie树/hash_map等统计每个文件中出现的词以及相应的频率。 • 堆/归并排序：取出出现频率最大的100个词（可以用含100个结点的最小堆），并把100个词及相应的频率存入文件，这样又得到了5000个文件。最后就是把这5000个文件进行归并（类似于归并排序）的过程了。 例子4：海量日志数据，提取出某日访问百度次数最多的那个IP。 思路： • 分而治之/hash映射：针对数据太大，内存受限，只能是：把大文件化成(取模映射)小文件，即16字方针：大而化小，各个击破，缩小规模，逐个解决 • hash统计：当大文件转化了小文件，那么我们便可以采用常规的Hashmap(ip，value)来进行频率统计。 • 堆/快速排序：统计完了之后，便进行排序(可采取堆排序)，得到次数最多的IP。
+
+## 95.请你说一下你用过哪些电商app,并比较他们的好坏
+
+用过淘宝，京东、唯品会、网易考拉、亚马逊 首先淘宝，用的最多，的确买日用品很方便，东西齐全，但是加载首页很慢，不够流畅，此外依旧是假货横行，应当加大打假力度， 京东，只买过U盘，但是退货后钱款没到账，找客服两次未解决，不提了，后面就卸了，没什么印象了 唯品会：排版不行，购物车只能保持十五分钟这个笔者持反对意见 网易考拉:货少但相对淘宝来说可信度比较高，当然价格也比较高，经常缺货 亚马逊：除了运费贵英文看的费力没毛病
+
+## 96.请你说一下分布式和集群的概念。
+
+分布式：是指将不同的业务分布在不同的地方， 集群：是指将几台服务器集中在一起，实现同一业务。 分布式中的每一个节点，都可以做集群，而集群并不一定就是分布式的。
+
+集群有组织性，一台服务器垮了，其它的服务器可以顶上来，而分布式的每一个节点，都完成不同的业务，一个节点垮了，哪这个业务就不可访问了。
+
+## 97.Hadoop你也有了解的，那你有了解他的备份机制吧？请问怎么做到数据保持一致？
+
+不了解
+
+## 98.5只猫 五分钟捉5只老鼠 请问100分钟捉100只老鼠需要多少只猫？
+
+5分钟内，平均1只猫捉一只老鼠，给猫100分钟，则它能抓20只，想要抓到100只，就得X5，所以是5只。
+
+## 99.逻辑题：3升的杯子一个，5升的杯子一个，杯子不规则形状 问怎么得到4升的水 水无限多
+
+1、将3升的装满倒入5升的；
+
+ 2、再一次将3升的转满，倒入5升的，把5升装满；
+
+ 3、3升杯里剩下的就是1升水；
+
+ 4、倒掉5升的，把1升水倒入5升杯；
+
+ 5、第三次加满3升杯，倒入5升杯，得到4升水。
+
+## 100.晚上有四个人过桥，一次只能过两个人，但是只有一只手电筒，四个人过桥时间分别是1，2，5，8，求最短过桥时间
+
+假设这四人依次是甲乙丙丁：首先甲和乙过桥,甲带手电筒回来；然后丙和丁过桥,由乙带手电筒回来；最后甲再和乙一起过桥.所以最少用时间是2+1+8+2+2=15（分钟）
+
+## 101.两个容积分别为5升和6升的桶，最后如何只装3升？
+
+第一步：先取来6升水，倒进5升桶的水桶里，即得到6升桶里余下的1升水；
+
+第二步：把5L桶清掉，把取到的1升水放进5升的水桶里保留不动，然后再取6升水，倒进5升的水桶里，6升的桶得到的是2升水，把5L桶清掉，存放这2升水；
+
+第三步：5升水桶有2升水．再取6升水，倒进5升水桶里，原有2L升+3升=5升，这时6升-3升=3升，6升里余下的就是3升水了。
+
+## 102.有十张扑克牌，每次可以只出一张，也可以只出两张，要出完有多少种出法
+
+还有一张牌就出完10张，可能的情况有两种，从9到10和从8到10，已知了从0到9的出法有N种，
+
+如果再知道从0到8的出法有P种，那么从0到10级的出法就是N+P，那么可得出： F(9)=N； F(8)=P； F(10)=N+P； F(10)=F(9)+F(8); 又有： F(1)=1; F(2)=2; 最后推出：F(10)=89
+
+## 103.井盖为什么是圆的
+
+井道大都是圆形的，所以井盖就做成圆形的。 很多井道都是圆形的，所以井盖自然也就是圆形的了。那为什么井大都是圆形的呢？因为建筑学和土木工程学中，圆形通道最有利于保持土壤的压力。 圆的受力更均匀不容易碎裂和塌陷 圆形井盖受力后，会向四周扩散压力，由于扩散均匀不容易碎裂和塌陷。 矩形的井盖由于受力不均匀，导致碎裂的几率远大于圆形。所以通过耐用性方面考虑还是圆形井盖合适。 圆形井盖从任何方向都不会掉落井下，也方便操作 矩形对角线的长度都大于矩形的长和宽。所以在对角线方向把井盖竖起来就容易掉落井下。 相对节省生成材料成本 相对于矩形或者正方形，矩形内切圆形的面积最小，生成用的材料也更少。
+
+## 104.从前有座山，山脚下有5个海盗抢到了100枚金币，每一颗都一样的大小和价值。他们决定通过抽签的方式，按顺序提出分配方案决定金币的归属。 首先，由1号提出方案，5个人进行表决，半数人以上（包括半数）同意时，方案通过，否则他将被扔入大海喂鲨鱼，剩余海盗继续按顺序提出方案，依次类推。 假设每个海盗都是足够理性及机智，会考虑到利害及利益最大化问题，那么，1号海盗提出怎样的分配方案才能顺利通过考验并拿到可能性内最多的金币呢？
+
+海盗分金推理过程： 从后向前推，如果只剩4号和5号的话，5号一定会投反对票让4号喂鲨鱼，以独吞全部金币。所以，4号唯有支持3号才能保命。3号知道这一点，就会提(100，0，0)的分配方案，对4号、5号一毛不拔而将全部金币归为己有，因为他知道4号一无所获也会投赞成票，再加上自己一票他的方案即可通过。不过，2号推知到3号的方案，就会提出(98，0，1，1)的方案，即放弃3号，而给予4号和5号各一枚金币。由于该方案对于4号和5号来说比在3号分配时更为有利，他们将支持他而不希望由3号来分配。这样，2号将拿走98枚金币。不过，2号的方案会被1号所洞悉，1号并将提出(97，0，1，2，0)或(97，0，1，0，2)的方案，即放弃2号，而给3号一枚金币，同时给4号(或5号)2枚金币。由于1号的这一方案对于3号和4号(或5号)来说，相比2号分配时更优，他们将投1号的赞成票，再加上1号自己的票，1号的方案可获通过，97枚金币可轻松落入囊中。
+
+## 105.烧一根不均匀的绳子，从头烧到尾总共需要1个小时，问如何用烧绳子的方法来确定15分钟?
+
+烧两根绳子，1第一根两头一起点，第二根点一头 2第一根烧完后点第二根另一端，从此时起计时，至第二根烧完，即15min（哎不知道出这种题是要干什么）
+
+## 106.两个盲人各买了一白一黑两双袜子，不小心弄混了，问他们自己怎么分成刚好每人一白一黑
+
+额因为袜子一双都是连在一起的，所以把两双袜子扯开，互相给对方一只，即可
+
+## 107.一个圆桌，两个人往上放硬币，只能平铺不能重合，最后一个放的人胜利（接下来硬币无处可放了），问先放的赢还是后放的赢。
+
+这道题会围棋的人一般都知道，只要先手把硬币放在圆桌正中心，随后第二个人无论把硬币放在哪，第一个人都把硬币放在对称的位置，即可，是先放的赢
+
+## 108.请问你有没有写过web测试，怎么写的？
+
+1、先测功能，全面覆盖pm需求，包括关联业务，以及异常情况。
+
+2、再测专项，效率性：网站的相应效率是否达标；
+
+兼容性：不同操作系统，不同浏览器，不同网络；
+
+易用性：产品是否好用，操作是否方便，布局是否合理，页面是否美观。
