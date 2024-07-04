@@ -48,23 +48,40 @@ typedef struct KeyValueNode {
 
 class section {
 public:
-	section() :_sectionName() {}						// 默认构造函数，初始化 _sectionName 为空字符串
-	explicit section(const std::string& sectionName) : _sectionName(sectionName) {}		// 显式构造函数，设置 _sectionName
-	const std::string& name();							// 返回节的名称
-	const std::string getValue(const std::string& Key);	// 获取与键 Key 相关联的值
-	void setName(const std::string& name, const int& lineNumber);						// 设置节的名称和行号
-	void setValue(const std::string& Key, const std::string& Value, const int line);	// 设置键 Key 对应的值和行号
-	void append(section& sec);							// 将另一个节 sec 的映射表附加到当前节的映射表中
-	bool isKeyExist(const std::string& Key);			// 检查节的映射表中是否存在指定的键 Key
-	int getEndSection();								// 获取节的映射表中最后一个键值对的行号
-	int getLine(const std::string& Key);				// 获取与键 Key 相关联的行号
-	const std::string operator[](const std::string& Key);	// 重载操作符 []，返回与键 Key 相关联的值
-	void clear();										// 清空节，重置所有值
-	bool isEmpty() const;								// 检查节是否为空
-	int toInt(const std::string& Key);					// 将与键 Key 相关联的值转换为整数
-	std::string toString(const std::string& Key);		// 返回与键 Key 相关联的值作为字符串
-	std::wstring toWString(const std::string& Key);		// 返回与键 Key 相关联的值作为宽字符串 (wstring)
-	double toDouble(const std::string& Key);			// 将与键 Key 相关联的值转换为双精度浮点数
+	// 默认构造函数，初始化 _sectionName 为空字符串
+	section() :_sectionName() {}
+	// 显式构造函数，设置 _sectionName
+	explicit section(const std::string& sectionName) : _sectionName(sectionName) {}
+	// 返回节的名称
+	const std::string& name();
+	// 获取与键 Key 相关联的值
+	const std::string getValue(const std::string& Key);
+	// 设置节的名称和行号
+	void setName(const std::string& name, const int& lineNumber);
+	// 设置键 Key 对应的值和行号
+	void setValue(const std::string& Key, const std::string& Value, const int line);
+	// 将另一个节 sec 的映射表附加到当前节的映射表中
+	void append(section& sec);
+	// 检查节的映射表中是否存在指定的键 Key
+	bool isKeyExist(const std::string& Key);
+	// 获取节的映射表中最后一个键值对的行号
+	int getEndSection();
+	// 获取与键 Key 相关联的行号
+	int getLine(const std::string& Key);
+	// 重载操作符 []，返回与键 Key 相关联的值
+	const std::string operator[](const std::string& Key);
+	// 清空节，重置所有值
+	void clear();
+	// 检查节是否为空
+	bool isEmpty() const;
+	// 将与键 Key 相关联的值转换为整数
+	int toInt(const std::string& Key);
+	// 返回与键 Key 相关联的值作为字符串
+	std::string toString(const std::string& Key);
+	// 返回与键 Key 相关联的值作为宽字符串 (wstring)
+	std::wstring toWString(const std::string& Key);
+	// 将与键 Key 相关联的值转换为双精度浮点数
+	double toDouble(const std::string& Key);
 private:
 	std::string _sectionName;							// 节的名称
 	std::map<std::string, KeyValueNode> _sectionMap;	// 存储键值对的映射表
@@ -73,17 +90,28 @@ private:
 
 class ini {
 public:
-	void addSection(section& sec);						// 添加一个节对象到_iniInfoMap中
-	void removeSection(const std::string& sectionName);	// 移除指定名称的节
-	bool isSectionExists(const std::string& sectionName);	// 检查是否存在指定名称的节
-	std::list<std::string> getSectionsList();			// 获取所有节的名称列表
-	const section& operator[](const std::string& sectionName);	// 重载操作符 []，返回指定名称的节对象引用
-	const int getSectionSize();							// 获取_iniInfoMap中节的数量
-	std::string getValue(const std::string& sectionName, const std::string& Key);	// 获取指定节和键的值
-	int getLine(const std::string& Key);				// 获取包含指定键的行号
-	int getLine(const std::string& sectionName, const std::string& Key);	// 获取指定节中包含指定键的行号
-	inline void clear() { _iniInfoMap.clear(); }		// 清空_iniInfoMap，移除所有节
-	inline bool empty() { return _iniInfoMap.empty(); }	// 检查_iniInfoMap是否为空
+	// 添加一个节对象到_iniInfoMap中
+	void addSection(section& sec);
+	// 移除指定名称的节
+	void removeSection(const std::string& sectionName);
+	// 检查是否存在指定名称的节
+	bool isSectionExists(const std::string& sectionName);
+	// 获取所有节的名称列表
+	std::list<std::string> getSectionsList();
+	// 重载操作符 []，返回指定名称的节对象引用
+	const section& operator[](const std::string& sectionName);
+	// 获取_iniInfoMap中节的数量
+	const int getSectionSize();
+	// 获取指定节和键的值
+	std::string getValue(const std::string& sectionName, const std::string& Key);
+	// 获取包含指定键的行号
+	int getLine(const std::string& Key);
+	// 获取指定节中包含指定键的行号
+	int getLine(const std::string& sectionName, const std::string& Key);
+	// 清空_iniInfoMap，移除所有节
+	inline void clear() { _iniInfoMap.clear(); }
+	// 检查_iniInfoMap是否为空
+	inline bool empty() { return _iniInfoMap.empty(); }
 protected:
 	std::map<std::string/*Section Name*/, section> _iniInfoMap;
 };

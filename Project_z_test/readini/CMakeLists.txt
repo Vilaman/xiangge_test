@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.0)
 project(readini CXX)
 
 # 设置 C 和 C++ 标准
-set(CMAKE_CXX_COMPILER aarch64-linux-gnu-g++)
+set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CXX_STANDARD 11)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
