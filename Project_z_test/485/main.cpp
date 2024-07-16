@@ -3,7 +3,7 @@
 #include <vector>
 #include <cstring>
 #include "comServer.h"
-comServer& g_comServer = comServer::getInstance();
+//comServer& g_comServer = comServer::getInstance();
 
 // 485接收消息回调函数
 void comRs485MsgCallBack(int MsgType, char* MsgData, int msgLen, void* pUserData) {
@@ -20,25 +20,25 @@ void comRs485MsgCallBack(int MsgType, char* MsgData, int msgLen, void* pUserData
 
     // 发送485消息
     std::vector<unsigned char> szAck = { 0x30, 0x31, 0x32, 0x30, 0x31, 0x32, 0x30, 0x31, 0x32, 0x30, 0x30, 0x31, 0x32, 0x30, 0x31, 0x32, 0x30, 0x31, 0x32, 0x30 };
-    std::cout << "Send ret: " << g_comServer.sendComRs485Msg(szAck.data(), szAck.size()) << std::endl;
+    std::cout << "Send ret: " << comServer::getInstance()->sendComRs485Msg(szAck.data(), szAck.size()) << std::endl;
 }
 
 int main() {
     int fd = 115200;
     std::cout << "请输入所需要的波特率：";
     std::cin >> fd;
-    if (g_comServer.comRs485Init(fd) != 0) {
+    if (comServer::getInstance()->comRs485Init(fd) != 0) {
         std::cerr << "Failed to initialize RS485 communication." << std::endl;
         return -1;
     }
 
-    g_comServer.setRs485MsgCallBack(comRs485MsgCallBack, NULL);
+    comServer::getInstance()->setRs485MsgCallBack(comRs485MsgCallBack, NULL);
 
     // 使用标记控制循环，以便优雅地退出
     bool running = true;
     while (running) {
-        g_comServer.loop();
+        comServer::getInstance()->loop();
     }
-    g_comServer.comRs485DeInit();
+    comServer::getInstance()->comRs485DeInit();
     return 0;
 }

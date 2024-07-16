@@ -20,9 +20,9 @@ typedef void (__STDCALL* ComRs485MsgCallBack)(int MsgType, char* MsgData, int Ms
 
 class comServer {
 public:
-	static comServer& getInstance() {
+	static comServer* getInstance() {
 		static comServer instance;
-		return instance;
+		return &instance;
 	}
 	int comRs485Init(int Speed);
 	int comRs485DeInit();
